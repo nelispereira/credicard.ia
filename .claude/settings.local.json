@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm *)",
+      "PowerShell(Move-Item *)",
+      "Bash(npx next *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3099/)",
+      "Bash(curl -s http://localhost:3099/)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\programming\\\\home\\\\credicard.ia\\\\src\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(dir \"c:\\\\programming\\\\home\\\\credicard.ia\\\\src\" /s /ad)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\programming\\\\ia\\\\credicard.ia\" -Recurse -Depth 2 -Directory)",
+      "Bash(xargs grep -l \"getServerSession\\\\|useSession\")",
+      "Bash(xargs grep -l \"proxy\\\\|middleware\")"
+    ]
+  }
+}

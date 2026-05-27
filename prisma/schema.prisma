@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Person {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cpf       String   @unique
+  email     String?
+  telefone  String?
+  createdAt DateTime @default(now())
+
+  cardUsages          CardUsage[]
+  invoiceTransactions InvoiceTransaction[]
+}
+
+model CreditCard {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  ultimos4  String
+  createdAt DateTime @default(now())
+
+  cardUsages CardUsage[]
+  invoices   Invoice[]
+
+  @@unique([nome, ultimos4])
+}
+
+model CardUsage {
+  id           Int      @id @default(autoincrement())
+  personId     Int
+  creditCardId Int
+  data         DateTime
+  descricao    String?
+  createdAt    DateTime @default(now())
+
+  person     Person     @relation(fields: [personId], references: [id])
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id])
+
+  @@unique([creditCardId, data])
+}
+
+model Invoice {
+  id            Int      @id @default(autoincrement())
+  creditCardId  Int
+  nomeArquivo   String
+  importadoEm   DateTime @default(now())
+  periodoInicio DateTime
+  periodoFim    DateTime
+
+  creditCard   CreditCard           @relation(fields: [creditCardId], references: [id])
+  transactions InvoiceTransaction[]
+}
+
+model InvoiceTransaction {
+  id                   Int      @id @default(autoincrement())
+  invoiceId            Int
+  data                 DateTime
+  descricao            String
+  valorBRL             Float
+  valorUSD             Float    @default(0)
+  pais                 String   @default("BR")
+  personId             Int?
+  atribuidoManualmente Boolean  @default(false)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  person  Person? @relation(fields: [personId], references: [id])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}

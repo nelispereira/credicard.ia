@@ -1,0 +1,188 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                 SISBB - Sistema de Informações Banco do Brasil                 
+23/05/2026                       Auto-Atendimento                       14:33:44
+                           Fatura do Cartão de Crédito                          
+ 
+ 
+Cliente         : NELIS N N PEREIRA                
+Nr.Cartão       : 4984.****.****.5802         
+Modalidade      : OUROCARD VISA INFINITE           
+ 
+Vencimento      : 05.05.2026          
+Total da fatura : R$ 11.898,46      
+Pagamento mínimo: R$ 1.784,77       
+ 
+DEMONSTRATIVO
+--------------------------------------------------------------------------------
+Data     Transações                             País        Valor R$   Valor US$
+--------------------------------------------------------------------------------
+                                                     
+ 
+         1 - NELIS N N PEREIRA                       
+                                                     
+         SALDO FATURA ANTERIOR                  BR         10.956,70        0,00
+                                                     
+ 
+         Pagamentos/Créditos                         
+06.04.2026PGTO. CASH AG.    4435 000443501  200100          -10.956,70        0,00
+                                                     
+ 
+         Serviços                                    
+04.04.2026IFD*iFood              Osasco        BR                5,95        0,00
+                                                     
+ 
+         Outros lançamentos                          
+26.03.2026APPLECOMBILL           SAO PAULO     BR               11,90        0,00
+02.04.2026DL*GOOGLE YouTub       SAO PAULO     BR               53,90        0,00
+13.04.2026APPLE.COM/BILL.        SAO PAULO     BR               19,90        0,00
+15.04.2026DL*GOOGLE Google       SAO PAULO     BR                9,99        0,00
+                                                     
+ 
+         Compras parceladas                          
+08.01.2026R. A. MONTEIR PARC 04/05 SANTANA     BR              119,60        0,00
+19.07.2025Graziela Sama PARC 09/10 MACAPA      BR              145,26        0,00
+16.10.2024IPLACE        PARC 18/21 SAO PAULO   BR              272,16        0,00
+20.02.2026R. A. MONTEIR PARC 02/04 SANTANA     BR              173,00        0,00
+25.02.2026Propig *HIPER PARC 02/06 Macapa      BR              142,60        0,00
+25.03.2026JIM.COM ALINN PARC 01/10 MACAPA      BR              250,00        0,00
+28.08.2025PICPAY*Lia Cr PARC 08/12 Sao Paulo   BR              578,10        0,00
+27.10.2025ZP*NESTOR DO4 PARC 06/10 MACAPA      BR              315,90        0,00
+27.02.2026BMB         * PARC 02/10 MACAPA      BR              467,07        0,00
+27.03.2026AlphaMalharia PARC 01/05 MACAPA      BR              398,58        0,00
+28.09.2025CasaDoCelular PARC 07/10 MACAPA      BR              100,00        0,00
+28.01.2026MP*DASGAMA81  PARC 03/06 MACAP       BR               90,83        0,00
+28.01.2026MP*DASGAMA81  PARC 03/06 MACAP       BR            1.000,00        0,00
+29.07.2025AMAZON PRIME  PARC 09/12 SAO PAULO   BR               13,90        0,00
+31.03.2026MLP*Magalu Ma PARC 01/10 BOM PRINCIPIBR              211,07        0,00
+01.07.2025CVC BRASIL    PARC 10/12 SANTO ANDRE BR              134,22        0,00
+05.07.2025SOU ENERGY    PARC 10/21 SAO GONCALO BR            1.428,57        0,00
+06.04.2026MP*MERCGODPEC PARC 01/12 MACAP       BR              212,61        0,00
+06.01.2026BMB           PARC 04/08 Rio de JaneiBR              311,88        0,00
+07.01.2026CENTRAL DA CO PARC 04/06 MACAPA      BR              132,24        0,00
+09.01.2026HIPERTRON     PARC 04/06 MACAPA      BR               69,24        0,00
+09.03.2026VIVO AP LJ X0 PARC 02/08 MACAPA      BR              371,12        0,00
+09.11.2025MLP*Magalu Mo PARC 06/10 RODEIRO     BR              133,60        0,00
+09.02.2026MARACA        PARC 03/03 MACAPA      BR              280,42        0,00
+10.02.2026HIPERTRON     PARC 03/05 MACAPA      BR               81,37        0,00
+10.03.2026DOMESTILAR LT PARC 02/02 MACAPA      BR               56,00        0,00
+10.03.2026TOP INTERNACI PARC 02/05 MACAPA      BR               57,60        0,00
+10.03.2026R. A. MONTEIR PARC 02/04 SANTANA     BR              210,50        0,00
+11.03.2025JoeliNazare   PARC 14/18 MACAPA      BR            1.174,16        0,00
+11.02.2026DIPROSEG MUCA PARC 03/03 MACAPA      BR              111,66        0,00
+11.01.2026LUIZ CASA E C PARC 04/06 MACAPA      BR              116,05        0,00
+13.04.2026PICPAY*Lia Cr PARC 01/07 Sao Paulo   BR              290,03        0,00
+13.04.2026HIPERTRON     PARC 01/06 MACAPA      BR               88,85        0,00
+15.11.2025DOMESTILAR    PARC 06/10 MACAPA      BR              245,80        0,00
+15.01.2026MP*DASGAMA81  PARC 04/06 MACAP       BR              583,33        0,00
+17.04.2026DISPEL AUTO P PARC 01/05 MACAPA      BR               90,00        0,00
+17.03.2026CHAMA CASA E  PARC 02/07 MACAPA      BR              156,99        0,00
+18.06.2025DOMESTILAR    PARC 11/12 MACAPA      BR              223,70        0,00
+17.04.2026HIPERTRON     PARC 01/06 MACAPA      BR              204,70        0,00
+19.02.2026HIPERTRON     PARC 03/06 MACAPA      BR              252,55        0,00
+20.04.2026TOP TENNYS    PARC 01/05 MACAPA      BR              140,02        0,00
+22.04.2026HIPERTRON     PARC 01/04 MACAPA      BR               62,20        0,00
+22.04.2026NI MAGAZINE M PARC 01/03 MACAPA      BR              299,34        0,00
+                                                     
+ 
+         SubTotal                                          11.898,46        0,00
+                                                     
+ 
+         Total                                             11.898,46        0,00
+                                                     
+                                                     
+ 
+         Declaração de quitação                      
+         Em cumprimento ao disposto na Lei 12.007,                0,00            
+         declaramos que no ano 2025 foram efetuados os                0,00            
+         seguintes pagamentos na conta cartão, vinculada ao                0,00            
+         cartão de crédito objeto desta fatura, em relação                0,00            
+         aos quais damos plena quitação:                        0,00            
+         Janeiro                                            7.622,19        0,00
+         Fevereiro                                          6.833,04        0,00
+         Março                                              8.652,39        0,00
+         Abril                                             10.451,06        0,00
+         Maio                                              11.417,12        0,00
+         Junho                                             12.369,15        0,00
+         Julho                                             11.989,67        0,00
+         Agosto                                            21.834,63        0,00
+         Setembro                                          10.474,11        0,00
+         Outubro                                            9.066,37        0,00
+         Novembro                                          24.631,43        0,00
+         Dezembro                                          10.431,98        0,00
+         Nos termos do artigo 4o. da mencionada Lei,                0,00            
+         informamos que a presente declaração de quitação                0,00            
+         substitui os comprovantes dos pagamentos que foram                0,00            
+         efetivamente lançados nas respectivas faturas,                0,00            
+         inclusive aqueles relativos a anos anteriores, os                0,00            
+         quais consideramos quitados até a data de                0,00            
+         vencimento da fatura de Dezembro/2025.                 0,00            
+ 
+ 
+RESUMO EM REAL
+--------------------------------------------------------------------------------
+   Saldo      Pagamento/    Compras/       Total     Lim. extra         Saldo   
+  Anterior     Créditos     Débitos          R$       utilizado      Atual - R$ 
+--------------------------------------------------------------------------------
+ 10.956,70 - -10.956,70 +  11.898,46 =   11.898,46 -       0,00 =      11.898,46
+--------------------------------------------------------------------------------
+ 
+RESUMO EM DÓLAR
+--------------------------------------------------------------------------------
+  Compras/     Outros                      Saldo       Taxa de         Saldo    
+   Saques      débitos      Créditos      Atual U$    conversão      convertido 
+--------------------------------------------------------------------------------
+      0,00 -       0,00 +       0,00 =        0,00   X   0,0000 =           0,00
+--------------------------------------------------------------------------------
+ 
+ 
+LIMITES - R$
+--------------------------------------------------------------------------------
+Total para transações à vista        : 102.000,00
+Saques                               : 102.000,00
+(Incluido no total transação à vista)
+Total para transações parceladas     :    0,00
+Crediário                            : 95.151,00
+ 
+ 
+ENCARGOS FINANCEIROS - R$              1         2
+--------------------------------------------------------------------------------
+Crédito Rotativo :                 10,40     14,16
+Crédito Parcelado:                  3,43     10,21
+Permanência      :                  1,00      1,00
+Multa            :                  2,00      2,00
+1. Para o periodo %am         
+2. Máximo próximo periodo %am 
+ 
+ 
+PONTO PRA VOCÊ/LIVELO
+--------------------------------------------------------------------------------
+    Pontuação acumulada Até 22.04.2026 :       0
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
