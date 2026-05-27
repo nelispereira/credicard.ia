@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
+import { prisma } from "@/lib/prisma";
 
 const cards = [
   {
@@ -49,6 +50,22 @@ const cards = [
 export default async function Home() {
   const session = await auth();
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
+  const adminEmail = session?.user?.email ?? "";
+
+  const [allUsers, pessoas] = await Promise.all([
+    prisma.user.findMany({
+      where: { email: { not: adminEmail } },
+      select: { email: true },
+    }),
+    prisma.person.findMany({ select: { email: true } }),
+  ]);
+
+  const pessoaEmails = new Set(
+    pessoas.map((p) => p.email?.toLowerCase()).filter(Boolean) as string[]
+  );
+  const pendentes = allUsers.filter(
+    (u) => !pessoaEmails.has(u.email.toLowerCase())
+  ).length;
 
   return (
     <div className="mt-4">
@@ -77,6 +94,32 @@ export default async function Home() {
             </div>
           </Link>
         ))}
+
+        <Link
+          href="/usuarios"
+          className="group flex items-start gap-4 p-5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all"
+        >
+          <div className="shrink-0 p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-0.5">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Usuários</h2>
+              {pendentes > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                  {pendentes}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {pendentes > 0
+                ? `${pendentes} usuário${pendentes > 1 ? "s" : ""} aguardando aprovação`
+                : "Gerencie quem pode acessar o sistema"}
+            </p>
+          </div>
+        </Link>
       </div>
     </div>
   );
