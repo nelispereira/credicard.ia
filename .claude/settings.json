@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Get-ChildItem -Path \"c:\\\\programming\\\\home\\\\credicard.ia\\\\src\" -Recurse -Name)"
+      "Bash(Get-ChildItem -Path \"c:\\\\programming\\\\home\\\\credicard.ia\\\\src\" -Recurse -Name)",
+      "Bash(npx tsc *)"
     ]
   }
 }

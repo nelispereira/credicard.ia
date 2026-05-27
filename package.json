@@ -1,9 +1,10 @@
 {
-  "name": "setup-temp",
-  "version": "0.1.0",
+  "name": "credicard.ia",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
