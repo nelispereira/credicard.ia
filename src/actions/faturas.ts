@@ -154,6 +154,22 @@ export async function atribuirTransacao(formData: FormData) {
     });
   }
 
+  // Auto-atribuir outras transações não atribuídas do mesmo dia na mesma fatura
+  if (tx) {
+    const dayStart = new Date(tx.data.getTime());
+    const dayEnd = new Date(tx.data.getTime() + 86_400_000 - 1);
+
+    await prisma.invoiceTransaction.updateMany({
+      where: {
+        invoiceId,
+        personId: null,
+        id: { not: transactionId },
+        data: { gte: dayStart, lte: dayEnd },
+      },
+      data: { personId, atribuidoManualmente: false },
+    });
+  }
+
   revalidatePath(`/faturas/${invoiceId}`);
   redirect(`/faturas/${invoiceId}`);
 }
