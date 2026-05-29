@@ -44,3 +44,36 @@ export async function deleteUso(formData: FormData) {
   revalidatePath("/usos");
   redirect("/usos");
 }
+
+export async function createDescriptionRule(
+  _: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+  const personId = parseInt(formData.get("personId") as string);
+  const creditCardId = parseInt(formData.get("creditCardId") as string);
+  const palavra = (formData.get("palavra") as string)?.trim();
+
+  if (!personId || !creditCardId || !palavra) {
+    return { error: "Preencha todos os campos obrigatórios." };
+  }
+
+  try {
+    await prisma.descriptionRule.create({
+      data: { personId, creditCardId, palavra },
+    });
+  } catch {
+    return { error: "Já existe uma regra com essa palavra-chave para esse cartão." };
+  }
+
+  revalidatePath("/usos");
+  redirect("/usos");
+}
+
+export async function deleteDescriptionRule(formData: FormData) {
+  await requireAdmin();
+  const id = parseInt(formData.get("id") as string);
+  await prisma.descriptionRule.delete({ where: { id } });
+  revalidatePath("/usos");
+  redirect("/usos");
+}

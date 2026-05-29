@@ -17,6 +17,7 @@ model Person {
 
   cardUsages          CardUsage[]
   invoiceTransactions InvoiceTransaction[]
+  descriptionRules    DescriptionRule[]
 }
 
 model CreditCard {
@@ -26,8 +27,9 @@ model CreditCard {
   diaVencimento  Int      @default(5)
   createdAt      DateTime @default(now())
 
-  cardUsages CardUsage[]
-  invoices   Invoice[]
+  cardUsages       CardUsage[]
+  invoices         Invoice[]
+  descriptionRules DescriptionRule[]
 
   @@unique([nome, ultimos4])
 }
@@ -44,6 +46,19 @@ model CardUsage {
   creditCard CreditCard @relation(fields: [creditCardId], references: [id])
 
   @@unique([creditCardId, data])
+}
+
+model DescriptionRule {
+  id           Int      @id @default(autoincrement())
+  personId     Int
+  creditCardId Int
+  palavra      String
+  createdAt    DateTime @default(now())
+
+  person     Person     @relation(fields: [personId], references: [id])
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id])
+
+  @@unique([creditCardId, palavra])
 }
 
 model Invoice {

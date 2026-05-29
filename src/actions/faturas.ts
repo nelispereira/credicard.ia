@@ -80,21 +80,38 @@ export async function importarFatura(
     },
   });
 
+  const descriptionRules = await prisma.descriptionRule.findMany({
+    where: { creditCardId },
+  });
+
   let lastPersonId: number | null = null;
 
   for (const tx of parsed.transactions) {
-    const dayStart = new Date(tx.data.getTime());
-    const dayEnd = new Date(tx.data.getTime() + 86_400_000 - 1);
-
-    const usage = await prisma.cardUsage.findFirst({
-      where: {
-        creditCardId,
-        data: { gte: dayStart, lte: dayEnd },
-      },
-    });
-
     const isIof = /^IOF\b/i.test(tx.descricao);
-    const personId = usage?.personId ?? (isIof ? lastPersonId : null);
+
+    const matchingRule = !isIof
+      ? descriptionRules.find((r) =>
+          tx.descricao.toLowerCase().includes(r.palavra.toLowerCase())
+        )
+      : undefined;
+
+    let personId: number | null;
+
+    if (matchingRule) {
+      personId = matchingRule.personId;
+    } else {
+      const dayStart = new Date(tx.data.getTime());
+      const dayEnd = new Date(tx.data.getTime() + 86_400_000 - 1);
+
+      const usage = await prisma.cardUsage.findFirst({
+        where: {
+          creditCardId,
+          data: { gte: dayStart, lte: dayEnd },
+        },
+      });
+
+      personId = usage?.personId ?? (isIof ? lastPersonId : null);
+    }
 
     await prisma.invoiceTransaction.create({
       data: {
@@ -110,7 +127,7 @@ export async function importarFatura(
     });
 
     if (!isIof) {
-      lastPersonId = usage?.personId ?? null;
+      lastPersonId = personId;
     }
   }
 

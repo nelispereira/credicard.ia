@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { deleteUso } from "@/actions/usos";
+import { deleteUso, deleteDescriptionRule } from "@/actions/usos";
 import { UsoForm } from "./_components/UsoForm";
+import { DescriptionRuleForm } from "./_components/DescriptionRuleForm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
@@ -13,7 +14,7 @@ export default async function UsosPage() {
   const session = await auth();
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
 
-  const [pessoas, cartoes, usos] = await Promise.all([
+  const [pessoas, cartoes, usos, regras] = await Promise.all([
     prisma.person.findMany({ orderBy: { nome: "asc" } }),
     prisma.creditCard.findMany({ orderBy: { nome: "asc" } }),
     prisma.cardUsage.findMany({
@@ -23,6 +24,13 @@ export default async function UsosPage() {
       },
       orderBy: { data: "desc" },
       take: 100,
+    }),
+    prisma.descriptionRule.findMany({
+      include: {
+        person: { select: { nome: true } },
+        creditCard: { select: { nome: true, ultimos4: true } },
+      },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 
@@ -106,6 +114,62 @@ export default async function UsosPage() {
 
       {usos.length === 0 && (
         <p className="text-sm text-gray-400 dark:text-gray-600">Nenhum registro de uso ainda.</p>
+      )}
+
+      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50 mt-10 mb-6">Regras por descrição</h1>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 -mt-4">
+        Transações cuja descrição contenha a palavra-chave serão atribuídas automaticamente à pessoa, com prioridade sobre a regra por data.
+      </p>
+
+      {pessoas.length > 0 && cartoes.length > 0 && (
+        <div className="mb-8 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">Nova regra</h2>
+          <DescriptionRuleForm pessoas={pessoas} cartoes={cartoes} />
+        </div>
+      )}
+
+      {regras.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Palavra-chave</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Pessoa</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Cartão</th>
+                  <th className="px-4 py-3 w-16"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {regras.map((r) => (
+                  <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-gray-900 dark:text-gray-100">{r.palavra}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{r.person.nome}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                      {r.creditCard.nome}{" "}
+                      <span className="font-mono text-xs">••{r.creditCard.ultimos4}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <form action={deleteDescriptionRule}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <button
+                          type="submit"
+                          className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                        >
+                          Excluir
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {regras.length === 0 && (
+        <p className="text-sm text-gray-400 dark:text-gray-600">Nenhuma regra por descrição cadastrada.</p>
       )}
     </div>
   );

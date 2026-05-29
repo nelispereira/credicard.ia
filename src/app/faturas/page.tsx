@@ -5,8 +5,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString("pt-BR", { timeZone: "UTC", month: "short", year: "numeric" });
+function formatMesAno(d: Date) {
+  return d.toLocaleDateString("pt-BR", { timeZone: "UTC", month: "long", year: "numeric" });
 }
 
 function formatVencimento(d: Date) {
@@ -68,26 +68,22 @@ export default async function FaturasPage() {
                     {f.creditCard.nome}{" "}
                     <span className="font-mono text-xs text-gray-500 dark:text-gray-400">•••{f.creditCard.ultimos4}</span>
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    {formatDate(f.periodoInicio)} — {formatDate(f.periodoFim)} · {f._count.transactions} transações
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 capitalize">
+                    {formatMesAno(f.periodoFim)}
                     {f.vencimento && (
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
                         · venc. {formatVencimento(f.vencimento)}
                       </span>
                     )}
-                    {naoAtribuidas > 0 && (
-                      <span className="ml-2 text-orange-600 dark:text-orange-400 font-medium">
-                        {naoAtribuidas} sem dono
-                      </span>
-                    )}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">{f.nomeArquivo}</p>
                 </div>
                 <div className="text-right ml-4 shrink-0">
                   <p className="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{formatBRL(total)}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
-                    {new Date(f.importadoEm).toLocaleDateString("pt-BR")}
-                  </p>
+                  {naoAtribuidas > 0 && (
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-0.5">
+                      {naoAtribuidas} não identificadas
+                    </p>
+                  )}
                 </div>
               </Link>
             );
