@@ -43,7 +43,7 @@ export function PessoaForm({ action, defaultValues }: Props) {
           </label>
           <input
             name="nome"
-            defaultValue={defaultValues?.nome}
+            defaultValue={state?.values?.nome ?? defaultValues?.nome}
             required
             className={inputClass}
           />
@@ -55,7 +55,7 @@ export function PessoaForm({ action, defaultValues }: Props) {
           </label>
           <input
             name="cpf"
-            defaultValue={defaultValues?.cpf}
+            defaultValue={state?.values?.cpf ?? defaultValues?.cpf}
             placeholder="Apenas números"
             maxLength={14}
             required
@@ -68,7 +68,7 @@ export function PessoaForm({ action, defaultValues }: Props) {
           <input
             name="email"
             type="email"
-            defaultValue={defaultValues?.email}
+            defaultValue={state?.values?.email ?? defaultValues?.email}
             className={inputClass}
           />
         </div>
@@ -77,7 +77,7 @@ export function PessoaForm({ action, defaultValues }: Props) {
           <label className={labelClass}>Telefone</label>
           <input
             name="telefone"
-            defaultValue={defaultValues?.telefone}
+            defaultValue={state?.values?.telefone ?? defaultValues?.telefone}
             placeholder="(11) 99999-9999"
             className={inputClass}
           />

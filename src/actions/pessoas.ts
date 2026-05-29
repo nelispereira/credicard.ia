@@ -6,7 +6,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth-utils";
 
-export type ActionState = { error: string } | null;
+type PessoaValues = { nome: string; cpf: string; email?: string; telefone?: string };
+export type ActionState = { error: string; values?: PessoaValues } | null;
 
 function rawPessoa(formData: FormData) {
   return {
@@ -22,13 +23,14 @@ export async function createPessoa(
   formData: FormData
 ): Promise<ActionState> {
   await requireAdmin();
-  const parsed = pessoaSchema.safeParse(rawPessoa(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const raw = rawPessoa(formData);
+  const parsed = pessoaSchema.safeParse(raw);
+  if (!parsed.success) return { error: parsed.error.issues[0].message, values: raw };
 
   try {
     await prisma.person.create({ data: parsed.data });
   } catch {
-    return { error: "CPF já cadastrado." };
+    return { error: "CPF já cadastrado.", values: raw };
   }
 
   revalidatePath("/pessoas");
@@ -41,13 +43,14 @@ export async function updatePessoa(
 ): Promise<ActionState> {
   await requireAdmin();
   const id = parseInt(formData.get("id") as string);
-  const parsed = pessoaSchema.safeParse(rawPessoa(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const raw = rawPessoa(formData);
+  const parsed = pessoaSchema.safeParse(raw);
+  if (!parsed.success) return { error: parsed.error.issues[0].message, values: raw };
 
   try {
     await prisma.person.update({ where: { id }, data: parsed.data });
   } catch {
-    return { error: "CPF já cadastrado em outro registro." };
+    return { error: "CPF já cadastrado em outro registro.", values: raw };
   }
 
   revalidatePath("/pessoas");

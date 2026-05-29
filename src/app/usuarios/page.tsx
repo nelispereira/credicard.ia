@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { AprovarForm } from "./_components/AprovarForm";
+import { AvatarModal } from "./_components/AvatarModal";
 
 export default async function UsuariosPage({
   searchParams,
@@ -52,12 +52,10 @@ export default async function UsuariosPage({
               >
                 <div className="flex items-center gap-4 p-4">
                   {user.image ? (
-                    <Image
+                    <AvatarModal
                       src={user.image}
                       alt={user.name ?? ""}
-                      width={40}
-                      height={40}
-                      className="rounded-full shrink-0"
+                      name={user.name ?? ""}
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0">

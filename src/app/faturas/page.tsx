@@ -9,6 +9,10 @@ function formatDate(d: Date) {
   return d.toLocaleDateString("pt-BR", { timeZone: "UTC", month: "short", year: "numeric" });
 }
 
+function formatVencimento(d: Date) {
+  return d.toLocaleDateString("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit" });
+}
+
 function formatBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -66,6 +70,11 @@ export default async function FaturasPage() {
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                     {formatDate(f.periodoInicio)} — {formatDate(f.periodoFim)} · {f._count.transactions} transações
+                    {f.vencimento && (
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        · venc. {formatVencimento(f.vencimento)}
+                      </span>
+                    )}
                     {naoAtribuidas > 0 && (
                       <span className="ml-2 text-orange-600 dark:text-orange-400 font-medium">
                         {naoAtribuidas} sem dono

@@ -21,7 +21,7 @@ export function ImportForm({ cartoes }: { cartoes: Cartao[] }) {
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className={labelClass}>
             Cartão <span className="text-red-500">*</span>
@@ -34,6 +34,18 @@ export function ImportForm({ cartoes }: { cartoes: Cartao[] }) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>
+            Mês/Ano <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="mesAno"
+            type="month"
+            required
+            className={selectClass}
+          />
         </div>
 
         <div>

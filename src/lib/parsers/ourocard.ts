@@ -18,6 +18,8 @@ export interface ParsedInvoice {
 const DATE_RE = /^(\d{2})\.(\d{2})\.(\d{4})/;
 const TRANSACTION_RE =
   /^(\d{2}\.\d{2}\.\d{4})(.+?)\s*(BR|US)\s+([\d.,]+)\s+([\d.,]+)/;
+const TX_FALLBACK_RE =
+  /^(\d{2}\.\d{2}\.\d{4})(.+?)\s+([\d.,]+)\s+([\d.,]+)\s*$/;
 const CARD_NR_RE = /Nr\.Cart[^\s:]+\s*:\s*[\d.]+\.(\d{4})/i;
 const CLIENT_RE = /Cliente\s*:\s*(.+)/i;
 const MODALIDADE_RE = /Modalidade\s*:\s*(.+)/i;
@@ -66,17 +68,30 @@ export function parseOurocardTxt(content: string): ParsedInvoice {
     if (!DATE_RE.test(line)) continue;
 
     const txMatch = line.match(TRANSACTION_RE);
-    if (!txMatch) continue;
+    if (txMatch) {
+      const [, rawDate, rawDesc, pais, rawBRL, rawUSD] = txMatch;
+      const [dd, mm, yyyy] = rawDate.split(".");
+      transactions.push({
+        data: parseDate(dd, mm, yyyy),
+        descricao: rawDesc.trim(),
+        pais,
+        valorBRL: parseBRL(rawBRL),
+        valorUSD: parseBRL(rawUSD),
+      });
+      continue;
+    }
 
-    const [, rawDate, rawDesc, pais, rawBRL, rawUSD] = txMatch;
-    const [dd, mm, yyyy] = rawDate.split(".");
+    const fallbackMatch = line.match(TX_FALLBACK_RE);
+    if (!fallbackMatch) continue;
 
+    const [, rawDate2, rawDesc2, rawBRL2, rawUSD2] = fallbackMatch;
+    const [dd2, mm2, yyyy2] = rawDate2.split(".");
     transactions.push({
-      data: parseDate(dd, mm, yyyy),
-      descricao: rawDesc.trim(),
-      pais,
-      valorBRL: parseBRL(rawBRL),
-      valorUSD: parseBRL(rawUSD),
+      data: parseDate(dd2, mm2, yyyy2),
+      descricao: rawDesc2.trim(),
+      pais: "BR",
+      valorBRL: parseBRL(rawBRL2),
+      valorUSD: parseBRL(rawUSD2),
     });
   }
 

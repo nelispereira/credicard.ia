@@ -7,7 +7,7 @@ type Action = (state: ActionState, data: FormData) => Promise<ActionState>;
 
 type Props = {
   action: Action;
-  defaultValues?: { id?: number; nome?: string; ultimos4?: string };
+  defaultValues?: { id?: number; nome?: string; ultimos4?: string; diaVencimento?: number };
 };
 
 const inputClass =
@@ -30,7 +30,7 @@ export function CartaoForm({ action, defaultValues }: Props) {
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className={labelClass}>
             Nome do cartão <span className="text-red-500">*</span>
@@ -53,6 +53,21 @@ export function CartaoForm({ action, defaultValues }: Props) {
             defaultValue={defaultValues?.ultimos4}
             placeholder="Ex: 1234"
             maxLength={4}
+            required
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>
+            Dia do vencimento <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="diaVencimento"
+            type="number"
+            defaultValue={defaultValues?.diaVencimento ?? 5}
+            min={1}
+            max={28}
             required
             className={inputClass}
           />

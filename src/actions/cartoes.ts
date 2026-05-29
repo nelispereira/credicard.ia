@@ -16,6 +16,7 @@ export async function createCartao(
   const parsed = cartaoSchema.safeParse({
     nome: formData.get("nome"),
     ultimos4: formData.get("ultimos4"),
+    diaVencimento: formData.get("diaVencimento"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -38,6 +39,7 @@ export async function updateCartao(
   const parsed = cartaoSchema.safeParse({
     nome: formData.get("nome"),
     ultimos4: formData.get("ultimos4"),
+    diaVencimento: formData.get("diaVencimento"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 

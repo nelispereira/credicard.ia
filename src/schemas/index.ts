@@ -14,6 +14,7 @@ export const cartaoSchema = z.object({
   ultimos4: z
     .string()
     .regex(/^\d{4}$/, "Informe os 4 últimos dígitos do cartão"),
+  diaVencimento: z.coerce.number().int().min(1).max(28).default(5),
 });
 
 export const usoCartaoSchema = z.object({

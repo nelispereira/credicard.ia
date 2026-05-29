@@ -33,6 +33,7 @@ export default async function EditarCartaoPage({
             id: cartao.id,
             nome: cartao.nome,
             ultimos4: cartao.ultimos4,
+            diaVencimento: cartao.diaVencimento,
           }}
         />
       </div>

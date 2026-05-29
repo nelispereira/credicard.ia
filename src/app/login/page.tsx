@@ -74,6 +74,7 @@ export default function LoginPage() {
         <p className="mt-5 text-center text-xs text-gray-400 dark:text-gray-600">
           Acesso restrito. Apenas usuários autorizados.
         </p>
+        <div className="pt-1 text-center text-xs text-gray-400">Version: <span className='text-xs font-medium'>{process.env.NEXT_PUBLIC_APP_VERSION}</span></div>
       </div>
     </div>
   );
