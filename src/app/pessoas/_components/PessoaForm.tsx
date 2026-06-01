@@ -21,6 +21,14 @@ const inputClass =
 
 const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5";
 
+function formatCpf(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length > 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length > 6) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  if (d.length > 3) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  return d;
+}
+
 export function PessoaForm({ action, defaultValues }: Props) {
   const [state, formAction, pending] = useActionState(action, null);
 
@@ -55,10 +63,13 @@ export function PessoaForm({ action, defaultValues }: Props) {
           </label>
           <input
             name="cpf"
-            defaultValue={state?.values?.cpf ?? defaultValues?.cpf}
-            placeholder="Apenas números"
+            defaultValue={formatCpf(state?.values?.cpf ?? defaultValues?.cpf ?? "")}
+            placeholder="000.000.000-00"
             maxLength={14}
             required
+            onInput={(e) => {
+              e.currentTarget.value = formatCpf(e.currentTarget.value);
+            }}
             className={inputClass}
           />
         </div>

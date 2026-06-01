@@ -2,28 +2,52 @@ import { prisma } from "@/lib/prisma";
 import { deleteUso, deleteDescriptionRule } from "@/actions/usos";
 import { UsoForm } from "./_components/UsoForm";
 import { DescriptionRuleForm } from "./_components/DescriptionRuleForm";
+import { UsosFilter } from "./_components/UsosFilter";
+import { DeleteButton } from "./_components/DeleteButton";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
+import type { Prisma } from "../../../prisma/generated/client";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
-export default async function UsosPage() {
+export default async function UsosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string; pessoaId?: string }>;
+}) {
   const session = await auth();
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
+
+  const { mes, pessoaId } = await searchParams;
+
+  const where: Prisma.CardUsageWhereInput = {};
+  if (mes) {
+    const [year, month] = mes.split("-").map(Number);
+    where.data = {
+      gte: new Date(Date.UTC(year, month - 1, 1)),
+      lt: new Date(Date.UTC(year, month, 1)),
+    };
+  }
+  if (pessoaId) {
+    where.personId = parseInt(pessoaId);
+  }
+
+  const hasFilter = !!(mes || pessoaId);
 
   const [pessoas, cartoes, usos, regras] = await Promise.all([
     prisma.person.findMany({ orderBy: { nome: "asc" } }),
     prisma.creditCard.findMany({ orderBy: { nome: "asc" } }),
     prisma.cardUsage.findMany({
+      where,
       include: {
         person: { select: { nome: true } },
         creditCard: { select: { nome: true, ultimos4: true } },
       },
       orderBy: { data: "desc" },
-      take: 100,
+      ...(hasFilter ? {} : { take: 100 }),
     }),
     prisma.descriptionRule.findMany({
       include: {
@@ -66,6 +90,8 @@ export default async function UsosPage() {
         </div>
       )}
 
+      <UsosFilter pessoas={pessoas} currentMes={mes} currentPessoaId={pessoaId} />
+
       {usos.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
           <div className="overflow-x-auto">
@@ -94,15 +120,7 @@ export default async function UsosPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-500">{u.descricao ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <form action={deleteUso}>
-                        <input type="hidden" name="id" value={u.id} />
-                        <button
-                          type="submit"
-                          className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
-                        >
-                          Excluir
-                        </button>
-                      </form>
+                      <DeleteButton action={deleteUso} id={u.id} />
                     </td>
                   </tr>
                 ))}
@@ -150,15 +168,7 @@ export default async function UsosPage() {
                       <span className="font-mono text-xs">••{r.creditCard.ultimos4}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <form action={deleteDescriptionRule}>
-                        <input type="hidden" name="id" value={r.id} />
-                        <button
-                          type="submit"
-                          className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
-                        >
-                          Excluir
-                        </button>
-                      </form>
+                      <DeleteButton action={deleteDescriptionRule} id={r.id} />
                     </td>
                   </tr>
                 ))}

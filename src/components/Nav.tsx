@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import NavLinks from "./NavLinks";
+import MobileNav from "./MobileNav";
 import { auth, signOut } from "@/auth";
 import { isAdmin } from "@/lib/auth-utils";
 
@@ -24,7 +25,9 @@ export default async function Nav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          <NavLinks isAdmin={adminUser} />
+          <div className="hidden md:flex items-center">
+            <NavLinks isAdmin={adminUser} />
+          </div>
           <ThemeToggle />
 
           {session?.user && (
@@ -50,6 +53,8 @@ export default async function Nav() {
               </form>
             </div>
           )}
+
+          <MobileNav isAdmin={adminUser} />
         </div>
       </div>
     </header>
