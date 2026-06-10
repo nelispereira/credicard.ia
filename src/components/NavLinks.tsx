@@ -8,9 +8,13 @@ const adminLinks = [
   { href: "/cartoes", label: "Cartões" },
   { href: "/usos", label: "Usos" },
   { href: "/faturas", label: "Faturas" },
+  { href: "/gastos", label: "Gastos" },
 ];
 
-const userLinks = [{ href: "/minha-conta", label: "Minha Conta" }];
+const userLinks = [
+  { href: "/minha-conta", label: "Minha Conta" },
+  { href: "/gastos", label: "Gastos" },
+];
 
 export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();

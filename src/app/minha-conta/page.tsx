@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin, getPersonByUserEmail } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
+import { calcularResumoMensal } from "@/actions/gastos";
+import { ResumoGastos } from "@/app/_components/ResumoGastos";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
@@ -17,15 +19,22 @@ export default async function MinhaContaPage() {
 
   if (isAdmin(email)) redirect("/");
 
-  const person = await getPersonByUserEmail(email);
+  const now = new Date();
+  const mes = now.getMonth() + 1;
+  const ano = now.getFullYear();
+
+  const [person, resumo] = await Promise.all([
+    getPersonByUserEmail(email),
+    calcularResumoMensal(mes, ano),
+  ]);
 
   if (!person) {
     return (
-      <div className="mt-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">
+      <div className="space-y-6 mt-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
           Minha Conta
         </h1>
-        <div className="mt-6 bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6 text-center">
+        <div className="bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6 text-center">
           <p className="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
             Conta ainda não vinculada
           </p>
@@ -38,6 +47,7 @@ export default async function MinhaContaPage() {
             administrador vincular seu e-mail.
           </p>
         </div>
+        <ResumoGastos initialData={resumo} initialMes={mes} initialAno={ano} />
       </div>
     );
   }
@@ -87,6 +97,9 @@ export default async function MinhaContaPage() {
           Suas despesas em cartões compartilhados
         </p>
       </div>
+
+      {/* Resumo de gastos mensais */}
+      <ResumoGastos initialData={resumo} initialMes={mes} initialAno={ano} />
 
       {invoiceGroups.length === 0 && (
         <p className="text-sm text-gray-400 dark:text-gray-600">

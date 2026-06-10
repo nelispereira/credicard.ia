@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
+import { calcularResumoMensal } from "@/actions/gastos";
+import { ResumoGastos } from "./_components/ResumoGastos";
 
 const cards = [
   {
@@ -52,12 +54,17 @@ export default async function Home() {
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
   const adminEmail = session?.user?.email ?? "";
 
-  const [allUsers, pessoas] = await Promise.all([
+  const now = new Date();
+  const mes = now.getMonth() + 1;
+  const ano = now.getFullYear();
+
+  const [allUsers, pessoas, resumo] = await Promise.all([
     prisma.user.findMany({
       where: { email: { not: adminEmail } },
       select: { email: true },
     }),
     prisma.person.findMany({ select: { email: true } }),
+    calcularResumoMensal(mes, ano),
   ]);
 
   const pessoaEmails = new Set(
@@ -120,6 +127,11 @@ export default async function Home() {
             </p>
           </div>
         </Link>
+      </div>
+
+      {/* Resumo de gastos do mês */}
+      <div className="mt-6">
+        <ResumoGastos initialData={resumo} initialMes={mes} initialAno={ano} />
       </div>
     </div>
   );

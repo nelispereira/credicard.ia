@@ -89,6 +89,41 @@ model InvoiceTransaction {
   person  Person? @relation(fields: [personId], references: [id])
 }
 
+enum TipoGasto {
+  UNICO
+  RECORRENTE
+  PARCELADO
+}
+
+model CategoriaGasto {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  nome      String
+  cor       String?
+  createdAt DateTime @default(now())
+
+  gastos Gasto[]
+  user   User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, nome])
+}
+
+model Gasto {
+  id             Int       @id @default(autoincrement())
+  userId         String
+  categoriaId    Int
+  descricao      String
+  valorTotal     Float
+  tipo           TipoGasto
+  dataInicio     DateTime
+  dataFim        DateTime?
+  numeroParcelas Int?
+  createdAt      DateTime  @default(now())
+
+  categoria CategoriaGasto @relation(fields: [categoriaId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -97,6 +132,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  categorias    CategoriaGasto[]
+  gastos        Gasto[]
 }
 
 model Account {
