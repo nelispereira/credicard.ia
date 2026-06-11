@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportForm } from "./_components/ImportForm";
+import { FaturasFilter } from "./_components/FaturasFilter";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth-utils";
@@ -17,21 +18,56 @@ function formatBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default async function FaturasPage() {
+function mesAnoKey(d: Date) {
+  const year = d.getUTCFullYear();
+  const month = d.getUTCMonth() + 1;
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+export default async function FaturasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cartao?: string; mes?: string }>;
+}) {
   const session = await auth();
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
+
+  const { cartao, mes } = await searchParams;
+
+  const cartaoId = cartao ? parseInt(cartao) : undefined;
+
+  let periodoFimGte: Date | undefined;
+  let periodoFimLte: Date | undefined;
+  if (mes) {
+    const [y, m] = mes.split("-").map(Number);
+    periodoFimGte = new Date(Date.UTC(y, m - 1, 1));
+    periodoFimLte = new Date(Date.UTC(y, m, 0, 23, 59, 59));
+  }
 
   const [cartoes, faturas] = await Promise.all([
     prisma.creditCard.findMany({ orderBy: { nome: "asc" } }),
     prisma.invoice.findMany({
+      where: {
+        ...(cartaoId ? { creditCardId: cartaoId } : {}),
+        ...(periodoFimGte ? { periodoFim: { gte: periodoFimGte, lte: periodoFimLte } } : {}),
+      },
       include: {
         creditCard: { select: { nome: true, ultimos4: true } },
         _count: { select: { transactions: true } },
         transactions: { select: { valorBRL: true, personId: true } },
       },
-      orderBy: { importadoEm: "desc" },
+      orderBy: { periodoFim: "desc" },
     }),
   ]);
+
+  // Agrupar por mês/ano da periodoFim
+  const grupos = new Map<string, typeof faturas>();
+  for (const f of faturas) {
+    const key = mesAnoKey(f.periodoFim);
+    if (!grupos.has(key)) grupos.set(key, []);
+    grupos.get(key)!.push(f);
+  }
+  const gruposOrdenados = [...grupos.entries()].sort((a, b) => b[0].localeCompare(a[0]));
 
   return (
     <div>
@@ -53,46 +89,64 @@ export default async function FaturasPage() {
       )}
 
       {faturas.length > 0 && (
-        <div className="space-y-3">
-          {faturas.map((f) => {
-            const total = f.transactions.reduce((s, t) => s + t.valorBRL, 0);
-            const naoAtribuidas = f.transactions.filter((t) => t.personId === null).length;
+        <FaturasFilter cartoes={cartoes} />
+      )}
+
+      {faturas.length > 0 && gruposOrdenados.length > 0 && (
+        <div className="space-y-6">
+          {gruposOrdenados.map(([, faturasDoMes]) => {
+            const primeiraFatura = faturasDoMes[0];
             return (
-              <Link
-                key={f.id}
-                href={`/faturas/${f.id}`}
-                className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all"
-              >
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    {f.creditCard.nome}{" "}
-                    <span className="font-mono text-xs text-gray-500 dark:text-gray-400">•••{f.creditCard.ultimos4}</span>
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 capitalize">
-                    {formatMesAno(f.periodoFim)}
-                    {f.vencimento && (
-                      <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        · venc. {formatVencimento(f.vencimento)}
-                      </span>
-                    )}
-                  </p>
+              <div key={mesAnoKey(primeiraFatura.periodoFim)}>
+                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                  {formatMesAno(primeiraFatura.periodoFim)}
+                </h2>
+                <div className="space-y-2">
+                  {faturasDoMes.map((f) => {
+                    const total = f.transactions.reduce((s, t) => s + t.valorBRL, 0);
+                    const naoAtribuidas = f.transactions.filter((t) => t.personId === null).length;
+                    return (
+                      <Link
+                        key={f.id}
+                        href={`/faturas/${f.id}`}
+                        className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {f.creditCard.nome}{" "}
+                            <span className="font-mono text-xs text-gray-500 dark:text-gray-400">•••{f.creditCard.ultimos4}</span>
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 capitalize">
+                            {formatMesAno(f.periodoFim)}
+                            {f.vencimento && (
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">
+                                · venc. {formatVencimento(f.vencimento)}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-right ml-4 shrink-0">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{formatBRL(total)}</p>
+                          {naoAtribuidas > 0 && (
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-0.5">
+                              {naoAtribuidas} não identificadas
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-                <div className="text-right ml-4 shrink-0">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{formatBRL(total)}</p>
-                  {naoAtribuidas > 0 && (
-                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-0.5">
-                      {naoAtribuidas} não identificadas
-                    </p>
-                  )}
-                </div>
-              </Link>
+              </div>
             );
           })}
         </div>
       )}
 
       {faturas.length === 0 && (
-        <p className="text-sm text-gray-400 dark:text-gray-600">Nenhuma fatura importada ainda.</p>
+        <p className="text-sm text-gray-400 dark:text-gray-600">
+          {cartao || mes ? "Nenhuma fatura encontrada com esses filtros." : "Nenhuma fatura importada ainda."}
+        </p>
       )}
     </div>
   );

@@ -25,9 +25,11 @@ export default async function Nav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          <div className="hidden md:flex items-center">
-            <NavLinks isAdmin={adminUser} />
-          </div>
+          {session?.user && (
+            <div className="hidden md:flex items-center">
+              <NavLinks isAdmin={adminUser} />
+            </div>
+          )}
           <ThemeToggle />
 
           {session?.user && (
@@ -54,7 +56,7 @@ export default async function Nav() {
             </div>
           )}
 
-          <MobileNav isAdmin={adminUser} />
+          {session?.user && <MobileNav isAdmin={adminUser} />}
         </div>
       </div>
     </header>

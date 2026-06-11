@@ -32,3 +32,17 @@ export async function aprovarUsuario(
   revalidatePath("/pessoas");
   redirect("/usuarios");
 }
+
+export async function alternarBloqueioUsuario(userId: string): Promise<void> {
+  await requireAdmin();
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { bloqueado: true } });
+  if (!user) return;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { bloqueado: !user.bloqueado },
+  });
+
+  revalidatePath("/usuarios");
+}

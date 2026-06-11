@@ -10,6 +10,7 @@ const adminLinks = [
   { href: "/usos", label: "Usos" },
   { href: "/faturas", label: "Faturas" },
   { href: "/gastos", label: "Gastos" },
+  { href: "/usuarios", label: "Usuários" },
 ];
 
 const userLinks = [

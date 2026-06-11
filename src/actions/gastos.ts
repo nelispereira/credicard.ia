@@ -352,11 +352,11 @@ export type ResumoMes = {
   total: number;
 };
 
-export async function calcularResumoUltimosMeses(nMeses: number): Promise<ResumoMes[]> {
+export async function calcularResumoUltimosMeses(nMeses: number, mesesFuturos = 0): Promise<ResumoMes[]> {
   const agora = new Date();
   const resultado: ResumoMes[] = [];
 
-  for (let i = nMeses - 1; i >= 0; i--) {
+  for (let i = nMeses - 1; i >= -mesesFuturos; i--) {
     const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
     const mes = d.getMonth() + 1;
     const ano = d.getFullYear();

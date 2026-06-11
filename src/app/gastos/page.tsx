@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import {
   listarCategorias,
   listarGastos,
@@ -13,7 +14,10 @@ import { ResumoGastos } from "@/app/_components/ResumoGastos";
 
 export default async function GastosPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user?.email) redirect("/login");
+
+  const dbUser = await prisma.user.findUnique({ where: { email: session.user.email }, select: { bloqueado: true } });
+  if (dbUser?.bloqueado) redirect("/login");
 
   const agora = new Date();
   const mesAtual = agora.getMonth() + 1;
@@ -23,7 +27,7 @@ export default async function GastosPage() {
     listarCategorias(),
     listarGastos(),
     calcularResumoMensal(mesAtual, anoAtual),
-    calcularResumoUltimosMeses(6),
+    calcularResumoUltimosMeses(6, 3),
   ]);
 
   return (

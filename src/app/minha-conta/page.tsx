@@ -17,7 +17,11 @@ export default async function MinhaContaPage() {
   const session = await auth();
   const email = session?.user?.email;
 
+  if (!email) redirect("/login");
   if (isAdmin(email)) redirect("/");
+
+  const dbUser = await prisma.user.findUnique({ where: { email }, select: { bloqueado: true } });
+  if (dbUser?.bloqueado) redirect("/login");
 
   const now = new Date();
   const mes = now.getMonth() + 1;
