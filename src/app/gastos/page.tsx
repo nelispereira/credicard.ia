@@ -1,16 +1,29 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { listarCategorias, listarGastos, excluirCategoria } from "@/actions/gastos";
-import { CategoriaForm } from "./_components/CategoriaForm";
+import {
+  listarCategorias,
+  listarGastos,
+  calcularResumoMensal,
+  calcularResumoUltimosMeses,
+} from "@/actions/gastos";
+import { CategoriasSection } from "./_components/CategoriasSection";
 import { GastosList } from "./_components/GastosList";
+import { GastosChart } from "./_components/GastosChart";
+import { ResumoGastos } from "@/app/_components/ResumoGastos";
 
 export default async function GastosPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const [categorias, gastos] = await Promise.all([
+  const agora = new Date();
+  const mesAtual = agora.getMonth() + 1;
+  const anoAtual = agora.getFullYear();
+
+  const [categorias, gastos, resumoMensal, historico] = await Promise.all([
     listarCategorias(),
     listarGastos(),
+    calcularResumoMensal(mesAtual, anoAtual),
+    calcularResumoUltimosMeses(6),
   ]);
 
   return (
@@ -24,50 +37,20 @@ export default async function GastosPage() {
         </p>
       </div>
 
-      {/* Seção Categorias */}
-      <section>
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-          Categorias
-        </h2>
+      {/* Gráfico histórico + resumo mensal lado a lado em telas grandes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GastosChart meses={historico} />
+        <ResumoGastos
+          initialData={resumoMensal}
+          initialMes={mesAtual}
+          initialAno={anoAtual}
+        />
+      </div>
 
-        {/* Lista de categorias */}
-        {categorias.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {categorias.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full text-sm"
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: cat.cor ?? "#6366f1" }}
-                />
-                <span className="text-gray-800 dark:text-gray-200">{cat.nome}</span>
-                <form action={excluirCategoria}>
-                  <input type="hidden" name="id" value={cat.id} />
-                  <button
-                    type="submit"
-                    className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 ml-1 leading-none transition-colors"
-                    title="Remover categoria"
-                  >
-                    ×
-                  </button>
-                </form>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Categorias */}
+      <CategoriasSection categorias={categorias} />
 
-        {/* Formulário nova categoria */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Nova categoria
-          </p>
-          <CategoriaForm />
-        </div>
-      </section>
-
-      {/* Seção Gastos */}
+      {/* Gastos cadastrados */}
       <section>
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
           Gastos cadastrados

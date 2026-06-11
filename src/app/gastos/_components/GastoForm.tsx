@@ -127,7 +127,7 @@ export function GastoForm({ action, categorias, defaultValues, onSuccess }: Prop
           <label className={labelClass}>Categoria <span className="text-red-500">*</span></label>
           <select name="categoriaId" required defaultValue={defaultValues?.categoriaId ?? ""} className={selectClass}>
             <option value="">Selecione…</option>
-            {categorias.map((c) => (
+            {[...categorias].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((c) => (
               <option key={c.id} value={c.id}>{c.nome}</option>
             ))}
           </select>

@@ -81,18 +81,26 @@ export async function editarCategoria(
   return null;
 }
 
-export async function excluirCategoria(formData: FormData) {
+export type CategoriaDeleteState = { error: string } | null;
+
+export async function excluirCategoria(
+  _: CategoriaDeleteState,
+  formData: FormData
+): Promise<CategoriaDeleteState> {
   const { userId } = await getSession();
   const id = parseInt(formData.get("id") as string);
 
   const categoria = await prisma.categoriaGasto.findFirst({ where: { id, userId } });
-  if (!categoria) return;
+  if (!categoria) return null;
 
   const count = await prisma.gasto.count({ where: { categoriaId: id } });
-  if (count > 0) throw new Error("Categoria possui gastos vinculados.");
+  if (count > 0) {
+    return { error: `A categoria "${categoria.nome}" possui gastos vinculados. Exclua ou reatribua os gastos antes de removê-la.` };
+  }
 
   await prisma.categoriaGasto.delete({ where: { id } });
   revalidatePath("/gastos");
+  return null;
 }
 
 // ---------- Gastos ----------
@@ -200,7 +208,7 @@ export async function excluirGasto(formData: FormData) {
 // ---------- Resumo mensal ----------
 
 export type ResumoMensal = {
-  porCategoria: { nome: string; cor: string | null; total: number }[];
+  porCategoria: { categoriaId: number; nome: string; cor: string | null; total: number }[];
   debitoCartao: number;
   totalGeral: number;
 };
@@ -264,7 +272,7 @@ export async function calcularResumoMensal(mes: number, ano: number): Promise<Re
   }
 
   // Agrupar gastos por categoria
-  const porCategoriaMap = new Map<number, { nome: string; cor: string | null; total: number }>();
+  const porCategoriaMap = new Map<number, { categoriaId: number; nome: string; cor: string | null; total: number }>();
 
   for (const gasto of gastos) {
     const { aplica, valorMensal } = gastoAplicaNoMes(gasto, mes, ano);
@@ -273,6 +281,7 @@ export async function calcularResumoMensal(mes: number, ano: number): Promise<Re
     const catId = gasto.categoriaId;
     if (!porCategoriaMap.has(catId)) {
       porCategoriaMap.set(catId, {
+        categoriaId: catId,
         nome: gasto.categoria.nome,
         cor: gasto.categoria.cor,
         total: 0,
@@ -289,4 +298,72 @@ export async function calcularResumoMensal(mes: number, ano: number): Promise<Re
   const totalGeral = totalGastos + debitoCartao;
 
   return { porCategoria, debitoCartao, totalGeral };
+}
+
+// ---------- Detalhamento de categoria no mês ----------
+
+export type GastoDetalhe = {
+  id: number;
+  descricao: string;
+  tipo: TipoGasto;
+  valorMensal: number;
+  valorTotal: number;
+  dataInicio: Date;
+  dataFim: Date | null;
+  numeroParcelas: number | null;
+};
+
+export async function listarGastosDaCategoriaNoMes(
+  categoriaId: number,
+  mes: number,
+  ano: number
+): Promise<GastoDetalhe[]> {
+  const { userId } = await getSession();
+
+  const gastos = await prisma.gasto.findMany({
+    where: { userId, categoriaId },
+  });
+
+  const resultado: GastoDetalhe[] = [];
+  for (const gasto of gastos) {
+    const { aplica, valorMensal } = gastoAplicaNoMes(gasto, mes, ano);
+    if (!aplica) continue;
+    resultado.push({
+      id: gasto.id,
+      descricao: gasto.descricao,
+      tipo: gasto.tipo as TipoGasto,
+      valorMensal,
+      valorTotal: gasto.valorTotal,
+      dataInicio: gasto.dataInicio,
+      dataFim: gasto.dataFim,
+      numeroParcelas: gasto.numeroParcelas,
+    });
+  }
+
+  return resultado.sort((a, b) => a.descricao.localeCompare(b.descricao));
+}
+
+// ---------- Histórico mensal para gráfico ----------
+
+export type ResumoMes = {
+  mes: number;
+  ano: number;
+  label: string;
+  total: number;
+};
+
+export async function calcularResumoUltimosMeses(nMeses: number): Promise<ResumoMes[]> {
+  const agora = new Date();
+  const resultado: ResumoMes[] = [];
+
+  for (let i = nMeses - 1; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const mes = d.getMonth() + 1;
+    const ano = d.getFullYear();
+    const resumo = await calcularResumoMensal(mes, ano);
+    const label = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+    resultado.push({ mes, ano, label, total: resumo.totalGeral });
+  }
+
+  return resultado;
 }
