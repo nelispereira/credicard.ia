@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdf-parse"],
+
   images: {
     remotePatterns: [
       {

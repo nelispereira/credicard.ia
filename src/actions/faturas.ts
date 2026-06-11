@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { parseOurocardTxt } from "@/lib/parsers/ourocard";
+import { parseInvoiceFile } from "@/lib/parsers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth-utils";
@@ -18,7 +18,7 @@ export async function importarFatura(
   const mesAno = formData.get("mesAno") as string; // formato YYYY-MM
 
   if (!arquivo || arquivo.size === 0) {
-    return { error: "Selecione um arquivo .txt para importar." };
+    return { error: "Selecione um arquivo .txt ou .pdf para importar." };
   }
   if (!creditCardId) {
     return { error: "Selecione o cartão correspondente." };
@@ -28,13 +28,13 @@ export async function importarFatura(
   }
 
   const buffer = await arquivo.arrayBuffer();
-  const content = new TextDecoder("windows-1252").decode(buffer);
 
   let parsed;
   try {
-    parsed = parseOurocardTxt(content);
-  } catch {
-    return { error: "Não foi possível ler o arquivo. Verifique o formato." };
+    parsed = await parseInvoiceFile(buffer, arquivo.name);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Não foi possível ler o arquivo.";
+    return { error: msg };
   }
 
   if (parsed.transactions.length === 0) {

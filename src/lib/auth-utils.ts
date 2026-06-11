@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-const ADMIN_EMAIL = "nelisnnp@gmail.com";
+export const ADMIN_EMAIL = "nelisnnp@gmail.com";
 
 export function isAdmin(email: string | null | undefined): boolean {
   return email === ADMIN_EMAIL;

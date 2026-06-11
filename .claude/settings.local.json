@@ -15,7 +15,10 @@
       "Bash(npx prisma *)",
       "Bash(Get-ChildItem -Path \"c:\\\\programming\\\\ia\\\\credicard.ia\" -Recurse -Depth 2 -Directory)",
       "Bash(xargs grep -l \"getServerSession\\\\|useSession\")",
-      "Bash(xargs grep -l \"proxy\\\\|middleware\")"
+      "Bash(xargs grep -l \"proxy\\\\|middleware\")",
+      "Bash(npm run *)",
+      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const m = require\\('pdf-parse'\\); console.log\\(typeof m, Object.keys\\(m\\)\\)\")"
     ]
   }
 }

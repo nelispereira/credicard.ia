@@ -50,12 +50,12 @@ export function ImportForm({ cartoes }: { cartoes: Cartao[] }) {
 
         <div>
           <label className={labelClass}>
-            Arquivo TXT <span className="text-red-500">*</span>
+            Arquivo TXT / PDF <span className="text-red-500">*</span>
           </label>
           <input
             name="arquivo"
             type="file"
-            accept=".txt"
+            accept=".txt,.pdf"
             required
             className="w-full text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-indigo-50 dark:file:bg-indigo-950 file:text-sm file:font-medium file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-800 transition-colors"
           />

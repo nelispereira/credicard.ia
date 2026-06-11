@@ -30,8 +30,21 @@ model CreditCard {
   cardUsages       CardUsage[]
   invoices         Invoice[]
   descriptionRules DescriptionRule[]
+  shares           CardShare[]
 
   @@unique([nome, ultimos4])
+}
+
+model CardShare {
+  id           Int      @id @default(autoincrement())
+  creditCardId Int
+  userId       String
+  createdAt    DateTime @default(now())
+
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([creditCardId, userId])
 }
 
 model CardUsage {
@@ -135,6 +148,7 @@ model User {
   sessions      Session[]
   categorias    CategoriaGasto[]
   gastos        Gasto[]
+  cardShares    CardShare[]
 }
 
 model Account {
