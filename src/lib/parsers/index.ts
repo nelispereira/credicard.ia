@@ -1,4 +1,3 @@
-import { PDFParse } from "pdf-parse";
 import type { ParsedInvoice } from "./ourocard";
 import { parseOurocardTxt } from "./ourocard";
 import { parseItauPdf } from "./itau";
@@ -26,6 +25,7 @@ export async function parseInvoiceFile(
   let text: string;
 
   if (isPdf) {
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     const result = await parser.getText();
     text = result.text;
