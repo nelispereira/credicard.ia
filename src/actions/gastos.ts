@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { categoriaGastoSchema, gastoSchema } from "@/schemas";
-import { getPersonByUserEmail } from "@/lib/auth-utils";
+import { getPersonByUserEmail, requireAdmin } from "@/lib/auth-utils";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
@@ -245,9 +245,12 @@ function gastoAplicaNoMes(
   return { aplica: true, valorMensal: gasto.valorTotal / parcelas };
 }
 
-export async function calcularResumoMensal(mes: number, ano: number): Promise<ResumoMensal> {
-  const { userId, email } = await getSession();
-
+async function calcularResumoMensalInterno(
+  userId: string,
+  email: string | null | undefined,
+  mes: number,
+  ano: number
+): Promise<ResumoMensal> {
   const [gastos, person] = await Promise.all([
     prisma.gasto.findMany({
       where: { userId },
@@ -300,6 +303,25 @@ export async function calcularResumoMensal(mes: number, ano: number): Promise<Re
   return { porCategoria, debitoCartao, totalGeral };
 }
 
+export async function calcularResumoMensal(mes: number, ano: number): Promise<ResumoMensal> {
+  const { userId, email } = await getSession();
+  return calcularResumoMensalInterno(userId, email, mes, ano);
+}
+
+export async function calcularResumoMensalAdmin(
+  targetUserId: string,
+  mes: number,
+  ano: number
+): Promise<ResumoMensal> {
+  await requireAdmin();
+  const user = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: { email: true },
+  });
+  if (!user) throw new Error("Usuário não encontrado");
+  return calcularResumoMensalInterno(targetUserId, user.email, mes, ano);
+}
+
 // ---------- Detalhamento de categoria no mês ----------
 
 export type GastoDetalhe = {
@@ -313,13 +335,12 @@ export type GastoDetalhe = {
   numeroParcelas: number | null;
 };
 
-export async function listarGastosDaCategoriaNoMes(
+async function listarGastosDaCategoriaNoMesInterno(
+  userId: string,
   categoriaId: number,
   mes: number,
   ano: number
 ): Promise<GastoDetalhe[]> {
-  const { userId } = await getSession();
-
   const gastos = await prisma.gasto.findMany({
     where: { userId, categoriaId },
   });
@@ -341,6 +362,25 @@ export async function listarGastosDaCategoriaNoMes(
   }
 
   return resultado.sort((a, b) => a.descricao.localeCompare(b.descricao));
+}
+
+export async function listarGastosDaCategoriaNoMes(
+  categoriaId: number,
+  mes: number,
+  ano: number
+): Promise<GastoDetalhe[]> {
+  const { userId } = await getSession();
+  return listarGastosDaCategoriaNoMesInterno(userId, categoriaId, mes, ano);
+}
+
+export async function listarGastosDaCategoriaNoMesAdmin(
+  targetUserId: string,
+  categoriaId: number,
+  mes: number,
+  ano: number
+): Promise<GastoDetalhe[]> {
+  await requireAdmin();
+  return listarGastosDaCategoriaNoMesInterno(targetUserId, categoriaId, mes, ano);
 }
 
 // ---------- Histórico mensal para gráfico ----------

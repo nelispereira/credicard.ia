@@ -8,6 +8,9 @@ import {
   type GastoDetalhe,
 } from "@/actions/gastos";
 
+type CarregarResumo = (mes: number, ano: number) => Promise<ResumoMensal>;
+type CarregarDetalhes = (categoriaId: number, mes: number, ano: number) => Promise<GastoDetalhe[]>;
+
 function formatBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -44,10 +47,12 @@ function CategoriaRow({
   cat,
   mes,
   ano,
+  carregarDetalhes,
 }: {
   cat: ResumoMensal["porCategoria"][number];
   mes: number;
   ano: number;
+  carregarDetalhes: CarregarDetalhes;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [detalhes, setDetalhes] = useState<GastoDetalhe[] | null>(null);
@@ -61,7 +66,7 @@ function CategoriaRow({
     setExpanded(true);
     if (detalhes === null) {
       startTransition(async () => {
-        const result = await listarGastosDaCategoriaNoMes(cat.categoriaId, mes, ano);
+        const result = await carregarDetalhes(cat.categoriaId, mes, ano);
         setDetalhes(result);
       });
     }
@@ -119,10 +124,14 @@ export function ResumoGastos({
   initialData,
   initialMes,
   initialAno,
+  carregarResumo = calcularResumoMensal,
+  carregarDetalhes = listarGastosDaCategoriaNoMes,
 }: {
   initialData: ResumoMensal;
   initialMes: number;
   initialAno: number;
+  carregarResumo?: CarregarResumo;
+  carregarDetalhes?: CarregarDetalhes;
 }) {
   const [mes, setMes] = useState(initialMes);
   const [ano, setAno] = useState(initialAno);
@@ -137,7 +146,7 @@ export function ResumoGastos({
     setMes(m);
     setAno(a);
     startTransition(async () => {
-      const result = await calcularResumoMensal(m, a);
+      const result = await carregarResumo(m, a);
       setData(result);
     });
   }
@@ -189,7 +198,13 @@ export function ResumoGastos({
 
         {/* Linhas por categoria (clicáveis) */}
         {data.porCategoria.map((cat) => (
-          <CategoriaRow key={cat.categoriaId} cat={cat} mes={mes} ano={ano} />
+          <CategoriaRow
+            key={cat.categoriaId}
+            cat={cat}
+            mes={mes}
+            ano={ano}
+            carregarDetalhes={carregarDetalhes}
+          />
         ))}
 
         {/* Linha débito cartão */}
