@@ -24,6 +24,12 @@ function mesAnoKey(d: Date) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
+// A fatura é nomeada pelo mês do vencimento (ex.: fatura "de agosto" vence em 05/08),
+// não pelo periodoFim, que é só a data da última transação lançada no arquivo.
+function mesReferencia(f: { periodoFim: Date; vencimento: Date | null }) {
+  return f.vencimento ?? f.periodoFim;
+}
+
 export default async function FaturasPage({
   searchParams,
 }: {
@@ -36,12 +42,12 @@ export default async function FaturasPage({
 
   const cartaoId = cartao ? parseInt(cartao) : undefined;
 
-  let periodoFimGte: Date | undefined;
-  let periodoFimLte: Date | undefined;
+  let mesGte: Date | undefined;
+  let mesLte: Date | undefined;
   if (mes) {
     const [y, m] = mes.split("-").map(Number);
-    periodoFimGte = new Date(Date.UTC(y, m - 1, 1));
-    periodoFimLte = new Date(Date.UTC(y, m, 0, 23, 59, 59));
+    mesGte = new Date(Date.UTC(y, m - 1, 1));
+    mesLte = new Date(Date.UTC(y, m, 0, 23, 59, 59));
   }
 
   const [cartoes, faturas] = await Promise.all([
@@ -49,21 +55,28 @@ export default async function FaturasPage({
     prisma.invoice.findMany({
       where: {
         ...(cartaoId ? { creditCardId: cartaoId } : {}),
-        ...(periodoFimGte ? { periodoFim: { gte: periodoFimGte, lte: periodoFimLte } } : {}),
+        ...(mesGte
+          ? {
+              OR: [
+                { vencimento: { gte: mesGte, lte: mesLte } },
+                { vencimento: null, periodoFim: { gte: mesGte, lte: mesLte } },
+              ],
+            }
+          : {}),
       },
       include: {
         creditCard: { select: { nome: true, ultimos4: true } },
         _count: { select: { transactions: true } },
         transactions: { select: { valorBRL: true, personId: true } },
       },
-      orderBy: { periodoFim: "desc" },
+      orderBy: [{ vencimento: "desc" }, { periodoFim: "desc" }],
     }),
   ]);
 
-  // Agrupar por mês/ano da periodoFim
+  // Agrupar pelo mês de referência da fatura (vencimento, com fallback para periodoFim)
   const grupos = new Map<string, typeof faturas>();
   for (const f of faturas) {
-    const key = mesAnoKey(f.periodoFim);
+    const key = mesAnoKey(mesReferencia(f));
     if (!grupos.has(key)) grupos.set(key, []);
     grupos.get(key)!.push(f);
   }
@@ -97,9 +110,9 @@ export default async function FaturasPage({
           {gruposOrdenados.map(([, faturasDoMes]) => {
             const primeiraFatura = faturasDoMes[0];
             return (
-              <div key={mesAnoKey(primeiraFatura.periodoFim)}>
+              <div key={mesAnoKey(mesReferencia(primeiraFatura))}>
                 <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                  {formatMesAno(primeiraFatura.periodoFim)}
+                  {formatMesAno(mesReferencia(primeiraFatura))}
                 </h2>
                 <div className="space-y-2">
                   {faturasDoMes.map((f) => {
@@ -117,7 +130,7 @@ export default async function FaturasPage({
                             <span className="font-mono text-xs text-gray-500 dark:text-gray-400">•••{f.creditCard.ultimos4}</span>
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 capitalize">
-                            {formatMesAno(f.periodoFim)}
+                            {formatMesAno(mesReferencia(f))}
                             {f.vencimento && (
                               <span className="ml-2 text-gray-600 dark:text-gray-400">
                                 · venc. {formatVencimento(f.vencimento)}

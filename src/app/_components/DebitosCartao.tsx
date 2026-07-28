@@ -25,6 +25,12 @@ function formatBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// A fatura é nomeada pelo mês do vencimento (ex.: fatura "de agosto" vence em 05/08),
+// não pelo periodoFim, que é só a data da última transação lançada no arquivo.
+function mesReferencia(f: { periodoFim: Date; vencimento: Date | null }) {
+  return f.vencimento ?? f.periodoFim;
+}
+
 const tabButtonClass = (ativo: boolean) =>
   `shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
     ativo
@@ -101,7 +107,7 @@ function buildCardGroups(transactions: PersonTransaction[]): CardGroup[] {
   return Array.from(byCard.entries()).map(([cardKey, faturas]) => {
     const meta = cardMeta.get(cardKey)!;
     const sorted = Array.from(faturas.values()).sort(
-      (a, b) => a.periodoFim.getTime() - b.periodoFim.getTime()
+      (a, b) => mesReferencia(a).getTime() - mesReferencia(b).getTime()
     );
     return { cardNome: meta.nome, cardUltimos4: meta.ultimos4, faturas: sorted };
   });
@@ -132,7 +138,7 @@ function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
               onClick={() => setAtivoId(f.invoiceId)}
               className={tabButtonClass(f.invoiceId === ativoId)}
             >
-              {labelMes(f.periodoFim.getUTCFullYear(), f.periodoFim.getUTCMonth() + 1)}
+              {labelMes(mesReferencia(f).getUTCFullYear(), mesReferencia(f).getUTCMonth() + 1)}
             </button>
           ))}
         </div>
@@ -140,7 +146,7 @@ function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
 
       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50/50 dark:bg-gray-800/20">
         <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-          Fatura de {formatMesAno(faturaAtiva.periodoFim)}
+          Fatura de {formatMesAno(mesReferencia(faturaAtiva))}
           {faturaAtiva.vencimento && (
             <span className="ml-1">· venc. {formatVencimento(faturaAtiva.vencimento)}</span>
           )}
@@ -190,7 +196,7 @@ function buildSharedCardGroups(sharedInvoices: SharedInvoice[]): SharedCardGroup
 
   return Array.from(byCard.entries()).map(([cardKey, invoices]) => {
     const meta = cardMeta.get(cardKey)!;
-    const sorted = [...invoices].sort((a, b) => a.periodoFim.getTime() - b.periodoFim.getTime());
+    const sorted = [...invoices].sort((a, b) => mesReferencia(a).getTime() - mesReferencia(b).getTime());
     return { cardNome: meta.nome, cardUltimos4: meta.ultimos4, invoices: sorted };
   });
 }
@@ -228,7 +234,7 @@ function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
               onClick={() => setAtivoId(inv.id)}
               className={tabButtonClass(inv.id === invoiceAtiva.id)}
             >
-              {labelMes(inv.periodoFim.getUTCFullYear(), inv.periodoFim.getUTCMonth() + 1)}
+              {labelMes(mesReferencia(inv).getUTCFullYear(), mesReferencia(inv).getUTCMonth() + 1)}
             </button>
           ))}
         </div>
@@ -236,7 +242,7 @@ function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
 
       <div className="flex items-center justify-between px-4 py-2.5 bg-indigo-50/40 dark:bg-indigo-950/20">
         <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-          Fatura de {formatMesAno(invoiceAtiva.periodoFim)}
+          Fatura de {formatMesAno(mesReferencia(invoiceAtiva))}
           {invoiceAtiva.vencimento && (
             <span className="ml-1">· venc. {formatVencimento(invoiceAtiva.vencimento)}</span>
           )}
