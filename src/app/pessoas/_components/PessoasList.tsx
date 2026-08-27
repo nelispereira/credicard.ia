@@ -67,6 +67,12 @@ export function PessoasList({ pessoas }: { pessoas: Pessoa[] }) {
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end">
                         <Link
+                          href={`/pessoas/${p.id}?nova=1#compras-diretas`}
+                          className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                        >
+                          Compra direta
+                        </Link>
+                        <Link
                           href={`/pessoas/${p.id}`}
                           className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
                         >

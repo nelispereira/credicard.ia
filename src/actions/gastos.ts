@@ -5,6 +5,7 @@ import { categoriaGastoSchema, gastoSchema } from "@/schemas";
 import { getPersonByUserEmail, requireAdmin } from "@/lib/auth-utils";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { calcularDebitoDiretoDoMes } from "@/actions/comprasDiretas";
 
 type TipoGasto = "UNICO" | "RECORRENTE" | "PARCELADO";
 
@@ -210,6 +211,7 @@ export async function excluirGasto(formData: FormData) {
 export type ResumoMensal = {
   porCategoria: { categoriaId: number; nome: string; cor: string | null; total: number }[];
   debitoCartao: number;
+  debitoDireto: number;
   totalGeral: number;
 };
 
@@ -259,19 +261,24 @@ async function calcularResumoMensalInterno(
     getPersonByUserEmail(email),
   ]);
 
-  // Débito cartão: transações do mês atribuídas à pessoa
+  // Débito cartão: transações do mês atribuídas à pessoa; débito direto: compras parceladas fora de fatura
   let debitoCartao = 0;
+  let debitoDireto = 0;
   if (person) {
     const inicioMes = new Date(ano, mes - 1, 1);
     const fimMes = new Date(ano, mes, 1);
-    const result = await prisma.invoiceTransaction.aggregate({
-      where: {
-        personId: person.id,
-        data: { gte: inicioMes, lt: fimMes },
-      },
-      _sum: { valorBRL: true },
-    });
+    const [result, direto] = await Promise.all([
+      prisma.invoiceTransaction.aggregate({
+        where: {
+          personId: person.id,
+          data: { gte: inicioMes, lt: fimMes },
+        },
+        _sum: { valorBRL: true },
+      }),
+      calcularDebitoDiretoDoMes(person.id, mes, ano),
+    ]);
     debitoCartao = result._sum.valorBRL ?? 0;
+    debitoDireto = direto;
   }
 
   // Agrupar gastos por categoria
@@ -298,9 +305,9 @@ async function calcularResumoMensalInterno(
   );
 
   const totalGastos = porCategoria.reduce((s, c) => s + c.total, 0);
-  const totalGeral = totalGastos + debitoCartao;
+  const totalGeral = totalGastos + debitoCartao + debitoDireto;
 
-  return { porCategoria, debitoCartao, totalGeral };
+  return { porCategoria, debitoCartao, debitoDireto, totalGeral };
 }
 
 export async function calcularResumoMensal(mes: number, ano: number): Promise<ResumoMensal> {

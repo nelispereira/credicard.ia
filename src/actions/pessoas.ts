@@ -61,12 +61,13 @@ export async function deletePessoa(formData: FormData) {
   await requireAdmin();
   const id = parseInt(formData.get("id") as string);
 
-  const [usages, transactions] = await Promise.all([
+  const [usages, transactions, comprasDiretas] = await Promise.all([
     prisma.cardUsage.count({ where: { personId: id } }),
     prisma.invoiceTransaction.count({ where: { personId: id } }),
+    prisma.compraDireta.count({ where: { personId: id } }),
   ]);
 
-  if (usages + transactions > 0) {
+  if (usages + transactions + comprasDiretas > 0) {
     redirect("/pessoas?erro=em-uso");
   }
 

@@ -107,16 +107,16 @@ function buildCardGroups(transactions: PersonTransaction[]): CardGroup[] {
   return Array.from(byCard.entries()).map(([cardKey, faturas]) => {
     const meta = cardMeta.get(cardKey)!;
     const sorted = Array.from(faturas.values()).sort(
-      (a, b) => mesReferencia(a).getTime() - mesReferencia(b).getTime()
+      (a, b) => mesReferencia(b).getTime() - mesReferencia(a).getTime()
     );
     return { cardNome: meta.nome, cardUltimos4: meta.ultimos4, faturas: sorted };
   });
 }
 
 function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
-  const ultima = grupo.faturas[grupo.faturas.length - 1];
-  const [ativoId, setAtivoId] = useState(ultima.invoiceId);
-  const faturaAtiva = grupo.faturas.find((f) => f.invoiceId === ativoId) ?? ultima;
+  const maisRecente = grupo.faturas[0];
+  const [ativoId, setAtivoId] = useState(maisRecente.invoiceId);
+  const faturaAtiva = grupo.faturas.find((f) => f.invoiceId === ativoId) ?? maisRecente;
   const subtotal = faturaAtiva.txs.reduce((s, t) => s + t.valorBRL, 0);
 
   return (
@@ -144,18 +144,6 @@ function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50/50 dark:bg-gray-800/20">
-        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-          Fatura de {formatMesAno(mesReferencia(faturaAtiva))}
-          {faturaAtiva.vencimento && (
-            <span className="ml-1">· venc. {formatVencimento(faturaAtiva.vencimento)}</span>
-          )}
-        </p>
-        <span className="font-bold text-gray-900 dark:text-gray-100 tabular-nums">
-          {formatBRL(subtotal)}
-        </span>
-      </div>
-
       <table className="w-full text-sm">
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
           {faturaAtiva.txs.map((tx) => (
@@ -171,6 +159,21 @@ function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
           ))}
         </tbody>
       </table>
+
+      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
+          Fatura de {formatMesAno(mesReferencia(faturaAtiva))}
+          {faturaAtiva.vencimento && (
+            <span className="ml-1">· venc. {formatVencimento(faturaAtiva.vencimento)}</span>
+          )}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Total da fatura</span>
+          <span className="font-bold text-lg tabular-nums text-gray-900 dark:text-gray-100">
+            {formatBRL(subtotal)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -196,15 +199,15 @@ function buildSharedCardGroups(sharedInvoices: SharedInvoice[]): SharedCardGroup
 
   return Array.from(byCard.entries()).map(([cardKey, invoices]) => {
     const meta = cardMeta.get(cardKey)!;
-    const sorted = [...invoices].sort((a, b) => mesReferencia(a).getTime() - mesReferencia(b).getTime());
+    const sorted = [...invoices].sort((a, b) => mesReferencia(b).getTime() - mesReferencia(a).getTime());
     return { cardNome: meta.nome, cardUltimos4: meta.ultimos4, invoices: sorted };
   });
 }
 
 function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
-  const ultima = grupo.invoices[grupo.invoices.length - 1];
-  const [ativoId, setAtivoId] = useState(ultima.id);
-  const invoiceAtiva = grupo.invoices.find((i) => i.id === ativoId) ?? ultima;
+  const maisRecente = grupo.invoices[0];
+  const [ativoId, setAtivoId] = useState(maisRecente.id);
+  const invoiceAtiva = grupo.invoices.find((i) => i.id === ativoId) ?? maisRecente;
 
   const byPerson = new Map<string, { nome: string; txs: SharedInvoice["transactions"] }>();
   for (const tx of invoiceAtiva.transactions) {
@@ -240,18 +243,6 @@ function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-2.5 bg-indigo-50/40 dark:bg-indigo-950/20">
-        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-          Fatura de {formatMesAno(mesReferencia(invoiceAtiva))}
-          {invoiceAtiva.vencimento && (
-            <span className="ml-1">· venc. {formatVencimento(invoiceAtiva.vencimento)}</span>
-          )}
-        </p>
-        <span className="font-bold text-gray-900 dark:text-gray-100 tabular-nums">
-          {formatBRL(total)}
-        </span>
-      </div>
-
       {Array.from(byPerson.entries()).map(([key, { nome, txs }]) => {
         const subtotal = txs.reduce((s, t) => s + t.valorBRL, 0);
         return (
@@ -282,6 +273,21 @@ function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
           </div>
         );
       })}
+
+      <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-950/40 border-t border-indigo-200 dark:border-indigo-800">
+        <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300 capitalize mb-1">
+          Fatura de {formatMesAno(mesReferencia(invoiceAtiva))}
+          {invoiceAtiva.vencimento && (
+            <span className="ml-1">· venc. {formatVencimento(invoiceAtiva.vencimento)}</span>
+          )}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">Total da fatura</span>
+          <span className="font-bold text-lg tabular-nums text-indigo-900 dark:text-indigo-200">
+            {formatBRL(total)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -311,18 +317,21 @@ export function DebitosCartao({
     <>
       {cardGroups.length > 0 && (
         <div className="space-y-4">
-          {cardGroups.map((g) => (
-            <CardFaturasPessoais key={`${g.cardNome}__${g.cardUltimos4}`} grupo={g} />
-          ))}
-
           <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 flex justify-between items-center">
-            <span className="font-semibold text-indigo-800 dark:text-indigo-300">
-              Total geral
-            </span>
+            <div>
+              <p className="font-semibold text-indigo-800 dark:text-indigo-300">Total geral</p>
+              <p className="text-xs text-indigo-600/80 dark:text-indigo-400/80">
+                Soma de todas as faturas, em todos os meses
+              </p>
+            </div>
             <span className="font-bold text-xl tabular-nums text-indigo-900 dark:text-indigo-200">
               {formatBRL(grandTotal)}
             </span>
           </div>
+
+          {cardGroups.map((g) => (
+            <CardFaturasPessoais key={`${g.cardNome}__${g.cardUltimos4}`} grupo={g} />
+          ))}
         </div>
       )}
 

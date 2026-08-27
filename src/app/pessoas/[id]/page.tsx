@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { updatePessoa } from "@/actions/pessoas";
 import { PessoaForm } from "../_components/PessoaForm";
+import { ComprasDiretasList } from "../_components/ComprasDiretasList";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/auth-utils";
 
@@ -14,7 +15,15 @@ export default async function EditarPessoaPage({
   if (!isAdmin(session?.user?.email)) redirect("/minha-conta");
 
   const { id } = await params;
-  const pessoa = await prisma.person.findUnique({ where: { id: parseInt(id) } });
+  const personId = parseInt(id);
+
+  const [pessoa, comprasDiretas] = await Promise.all([
+    prisma.person.findUnique({ where: { id: personId } }),
+    prisma.compraDireta.findMany({
+      where: { personId },
+      orderBy: [{ dataInicio: "desc" }, { createdAt: "desc" }],
+    }),
+  ]);
   if (!pessoa) notFound();
 
   return (
@@ -37,6 +46,11 @@ export default async function EditarPessoaPage({
             telefone: pessoa.telefone ?? undefined,
           }}
         />
+      </div>
+
+      <div id="compras-diretas" className="mt-6 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-3">Compras diretas</h2>
+        <ComprasDiretasList personId={pessoa.id} compras={comprasDiretas} />
       </div>
     </div>
   );

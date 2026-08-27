@@ -18,6 +18,19 @@ model Person {
   cardUsages          CardUsage[]
   invoiceTransactions InvoiceTransaction[]
   descriptionRules    DescriptionRule[]
+  comprasDiretas      CompraDireta[]
+}
+
+model CompraDireta {
+  id             Int      @id @default(autoincrement())
+  personId       Int
+  descricao      String
+  valorTotal     Float
+  numeroParcelas Int      @default(1)
+  dataInicio     DateTime
+  createdAt      DateTime @default(now())
+
+  person Person @relation(fields: [personId], references: [id])
 }
 
 model CreditCard {

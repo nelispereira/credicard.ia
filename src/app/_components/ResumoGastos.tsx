@@ -152,7 +152,7 @@ export function ResumoGastos({
   }
 
   const total = data.totalGeral;
-  const temDados = data.porCategoria.length > 0 || data.debitoCartao > 0;
+  const temDados = data.porCategoria.length > 0 || data.debitoCartao > 0 || data.debitoDireto > 0;
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
@@ -215,6 +215,19 @@ export function ResumoGastos({
               <span className="text-sm text-gray-700 dark:text-gray-300">Cartão de crédito</span>
               <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">
                 {formatBRL(data.debitoCartao)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Linha compras diretas */}
+        {data.debitoDireto > 0 && (
+          <div className="flex items-center gap-3 py-1">
+            <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-gray-400 dark:bg-gray-600" />
+            <div className="flex-1 flex items-center justify-between">
+              <span className="text-sm text-gray-700 dark:text-gray-300">Compras diretas</span>
+              <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">
+                {formatBRL(data.debitoDireto)}
               </span>
             </div>
           </div>

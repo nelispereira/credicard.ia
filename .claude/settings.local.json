@@ -18,7 +18,8 @@
       "Bash(xargs grep -l \"proxy\\\\|middleware\")",
       "Bash(npm run *)",
       "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
-      "Bash(node -e \"const m = require\\('pdf-parse'\\); console.log\\(typeof m, Object.keys\\(m\\)\\)\")"
+      "Bash(node -e \"const m = require\\('pdf-parse'\\); console.log\\(typeof m, Object.keys\\(m\\)\\)\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

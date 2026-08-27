@@ -49,9 +49,18 @@ export const gastoSchema = z
     { message: "Informe o número de parcelas (mínimo 2)", path: ["numeroParcelas"] }
   );
 
+export const compraDiretaSchema = z.object({
+  personId: z.coerce.number().int().positive(),
+  descricao: z.string().min(2, "Descrição deve ter ao menos 2 caracteres"),
+  valorTotal: z.coerce.number().positive("Informe um valor maior que zero"),
+  dataInicio: z.coerce.date(),
+  numeroParcelas: z.coerce.number().int().min(1, "Mínimo de 1 parcela").default(1),
+});
+
 export type PessoaInput = z.infer<typeof pessoaSchema>;
 export type CartaoInput = z.infer<typeof cartaoSchema>;
 export type UsoCartaoInput = z.infer<typeof usoCartaoSchema>;
 export type AtribuirTransacaoInput = z.infer<typeof atribuirTransacaoSchema>;
 export type CategoriaGastoInput = z.infer<typeof categoriaGastoSchema>;
 export type GastoInput = z.infer<typeof gastoSchema>;
+export type CompraDiretaInput = z.infer<typeof compraDiretaSchema>;
