@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { compraDiretaAplicaNoMes } from "@/lib/compras-diretas-utils";
 
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -49,6 +50,14 @@ type PersonTransaction = {
     vencimento: Date | null;
     creditCard: { nome: string; ultimos4: string };
   };
+};
+
+type CompraDiretaRaw = {
+  id: number;
+  descricao: string;
+  valorTotal: number;
+  numeroParcelas: number;
+  dataInicio: Date;
 };
 
 type SharedInvoice = {
@@ -113,11 +122,26 @@ function buildCardGroups(transactions: PersonTransaction[]): CardGroup[] {
   });
 }
 
-function CardFaturasPessoais({ grupo }: { grupo: CardGroup }) {
+function CardFaturasPessoais({
+  grupo,
+  cardKey,
+  onFaturaAtivaChange,
+}: {
+  grupo: CardGroup;
+  cardKey: string;
+  onFaturaAtivaChange: (cardKey: string, mes: number, ano: number, subtotal: number) => void;
+}) {
   const maisRecente = grupo.faturas[0];
   const [ativoId, setAtivoId] = useState(maisRecente.invoiceId);
   const faturaAtiva = grupo.faturas.find((f) => f.invoiceId === ativoId) ?? maisRecente;
   const subtotal = faturaAtiva.txs.reduce((s, t) => s + t.valorBRL, 0);
+  const referencia = mesReferencia(faturaAtiva);
+  const refMes = referencia.getUTCMonth() + 1;
+  const refAno = referencia.getUTCFullYear();
+
+  useEffect(() => {
+    onFaturaAtivaChange(cardKey, refMes, refAno, subtotal);
+  }, [cardKey, refMes, refAno, subtotal, onFaturaAtivaChange]);
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
@@ -294,14 +318,44 @@ function CardFaturaCompartilhada({ grupo }: { grupo: SharedCardGroup }) {
 
 // ---------- Componente principal ----------
 
+type FaturaAtivaInfo = { mes: number; ano: number; subtotal: number };
+
 export function DebitosCartao({
   transactions,
   sharedInvoices,
+  comprasDiretas,
 }: {
   transactions: PersonTransaction[];
   sharedInvoices: SharedInvoice[];
+  comprasDiretas: CompraDiretaRaw[];
 }) {
-  if (transactions.length === 0 && sharedInvoices.length === 0) {
+  const cardGroups = buildCardGroups(transactions);
+  const sharedCardGroups = buildSharedCardGroups(sharedInvoices);
+
+  const [faturaAtivaPorCartao, setFaturaAtivaPorCartao] = useState<Record<string, FaturaAtivaInfo>>(() => {
+    const map: Record<string, FaturaAtivaInfo> = {};
+    for (const g of cardGroups) {
+      const f = g.faturas[0];
+      if (!f) continue;
+      const ref = mesReferencia(f);
+      map[`${g.cardNome}__${g.cardUltimos4}`] = {
+        mes: ref.getUTCMonth() + 1,
+        ano: ref.getUTCFullYear(),
+        subtotal: f.txs.reduce((s, t) => s + t.valorBRL, 0),
+      };
+    }
+    return map;
+  });
+
+  const handleFaturaAtivaChange = useCallback((cardKey: string, mes: number, ano: number, subtotal: number) => {
+    setFaturaAtivaPorCartao((prev) => {
+      const atual = prev[cardKey];
+      if (atual && atual.mes === mes && atual.ano === ano && atual.subtotal === subtotal) return prev;
+      return { ...prev, [cardKey]: { mes, ano, subtotal } };
+    });
+  }, []);
+
+  if (transactions.length === 0 && sharedInvoices.length === 0 && comprasDiretas.length === 0) {
     return (
       <p className="text-sm text-gray-400 dark:text-gray-600">
         Nenhuma transação encontrada até o momento.
@@ -309,29 +363,48 @@ export function DebitosCartao({
     );
   }
 
-  const cardGroups = buildCardGroups(transactions);
-  const sharedCardGroups = buildSharedCardGroups(sharedInvoices);
-  const grandTotal = transactions.reduce((s, t) => s + t.valorBRL, 0);
+  // Mês de referência para as compras diretas: o da fatura selecionada no primeiro
+  // cartão (caso comum de 1 cartão pessoal); sem cartão, cai no mês atual.
+  const primeiraCardKey = cardGroups[0] ? `${cardGroups[0].cardNome}__${cardGroups[0].cardUltimos4}` : undefined;
+  const referenciaAtiva = primeiraCardKey ? faturaAtivaPorCartao[primeiraCardKey] : undefined;
+  const agora = new Date();
+  const refMesComprasDiretas = referenciaAtiva?.mes ?? agora.getMonth() + 1;
+  const refAnoComprasDiretas = referenciaAtiva?.ano ?? agora.getFullYear();
+
+  const totalFaturasSelecionadas = Object.values(faturaAtivaPorCartao).reduce((s, f) => s + f.subtotal, 0);
+  const totalComprasDiretasDoMes = comprasDiretas.reduce((s, c) => {
+    const { aplica, valorMensal } = compraDiretaAplicaNoMes(c, refMesComprasDiretas, refAnoComprasDiretas);
+    return aplica ? s + valorMensal : s;
+  }, 0);
+  const totalDoMes = totalFaturasSelecionadas + totalComprasDiretasDoMes;
 
   return (
     <>
-      {cardGroups.length > 0 && (
+      {(cardGroups.length > 0 || comprasDiretas.length > 0) && (
         <div className="space-y-4">
           <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 flex justify-between items-center">
             <div>
-              <p className="font-semibold text-indigo-800 dark:text-indigo-300">Total geral</p>
+              <p className="font-semibold text-indigo-800 dark:text-indigo-300">Total do mês</p>
               <p className="text-xs text-indigo-600/80 dark:text-indigo-400/80">
-                Soma de todas as faturas, em todos os meses
+                Compras diretas + fatura selecionada do(s) cartão(ões)
               </p>
             </div>
             <span className="font-bold text-xl tabular-nums text-indigo-900 dark:text-indigo-200">
-              {formatBRL(grandTotal)}
+              {formatBRL(totalDoMes)}
             </span>
           </div>
 
-          {cardGroups.map((g) => (
-            <CardFaturasPessoais key={`${g.cardNome}__${g.cardUltimos4}`} grupo={g} />
-          ))}
+          {cardGroups.map((g) => {
+            const cardKey = `${g.cardNome}__${g.cardUltimos4}`;
+            return (
+              <CardFaturasPessoais
+                key={cardKey}
+                grupo={g}
+                cardKey={cardKey}
+                onFaturaAtivaChange={handleFaturaAtivaChange}
+              />
+            );
+          })}
         </div>
       )}
 

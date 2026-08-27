@@ -4,29 +4,44 @@ import { prisma } from "@/lib/prisma";
 import { compraDiretaSchema } from "@/schemas";
 import { requireAdmin } from "@/lib/auth-utils";
 import { revalidatePath } from "next/cache";
+import { compraDiretaAplicaNoMes } from "@/lib/compras-diretas-utils";
 
-function compraDiretaAplicaNoMes(
-  compra: { dataInicio: Date; numeroParcelas: number; valorTotal: number },
+export type CompraDiretaDetalhe = {
+  id: number;
+  descricao: string;
+  valorMensal: number;
+  valorTotal: number;
+  numeroParcelas: number;
+  parcelaAtual: number;
+};
+
+export async function listarComprasDiretasDoMes(
+  personId: number,
   mes: number,
   ano: number
-): { aplica: boolean; valorMensal: number } {
-  const inicio = new Date(compra.dataInicio);
-  const inicioMes = inicio.getUTCMonth() + 1;
-  const inicioAno = inicio.getUTCFullYear();
-  const mesRef = ano * 12 + mes;
-  const mesInicio = inicioAno * 12 + inicioMes;
-  const mesFim = mesInicio + compra.numeroParcelas - 1;
-
-  if (mesRef < mesInicio || mesRef > mesFim) return { aplica: false, valorMensal: 0 };
-  return { aplica: true, valorMensal: compra.valorTotal / compra.numeroParcelas };
-}
-
-export async function calcularDebitoDiretoDoMes(personId: number, mes: number, ano: number): Promise<number> {
+): Promise<CompraDiretaDetalhe[]> {
   const compras = await prisma.compraDireta.findMany({ where: { personId } });
-  return compras.reduce((soma, c) => {
+
+  const resultado: CompraDiretaDetalhe[] = [];
+  for (const c of compras) {
     const { aplica, valorMensal } = compraDiretaAplicaNoMes(c, mes, ano);
-    return aplica ? soma + valorMensal : soma;
-  }, 0);
+    if (!aplica) continue;
+
+    const inicio = new Date(c.dataInicio);
+    const mesInicio = inicio.getUTCFullYear() * 12 + (inicio.getUTCMonth() + 1);
+    const mesRef = ano * 12 + mes;
+
+    resultado.push({
+      id: c.id,
+      descricao: c.descricao,
+      valorMensal,
+      valorTotal: c.valorTotal,
+      numeroParcelas: c.numeroParcelas,
+      parcelaAtual: mesRef - mesInicio + 1,
+    });
+  }
+
+  return resultado.sort((a, b) => a.descricao.localeCompare(b.descricao));
 }
 
 export async function listarComprasDiretas(personId: number) {

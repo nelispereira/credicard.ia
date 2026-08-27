@@ -69,19 +69,22 @@ export default async function MinhaContaPage() {
   }
 
   // Transações pessoais
-  const transactions = person
-    ? await prisma.invoiceTransaction.findMany({
-        where: { personId: person.id },
-        include: {
-          invoice: {
-            include: {
-              creditCard: { select: { nome: true, ultimos4: true } },
+  const [transactions, comprasDiretas] = person
+    ? await Promise.all([
+        prisma.invoiceTransaction.findMany({
+          where: { personId: person.id },
+          include: {
+            invoice: {
+              include: {
+                creditCard: { select: { nome: true, ultimos4: true } },
+              },
             },
           },
-        },
-        orderBy: { data: "asc" },
-      })
-    : [];
+          orderBy: { data: "asc" },
+        }),
+        prisma.compraDireta.findMany({ where: { personId: person.id } }),
+      ])
+    : [[], []];
 
   return (
     <div className="space-y-6 mt-4">
@@ -97,7 +100,7 @@ export default async function MinhaContaPage() {
       {/* Resumo de gastos mensais */}
       <ResumoGastos initialData={resumo} initialMes={mes} initialAno={ano} />
 
-      <DebitosCartao transactions={transactions} sharedInvoices={sharedInvoices} />
+      <DebitosCartao transactions={transactions} sharedInvoices={sharedInvoices} comprasDiretas={comprasDiretas} />
     </div>
   );
 }

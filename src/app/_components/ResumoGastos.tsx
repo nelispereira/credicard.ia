@@ -7,6 +7,7 @@ import {
   type ResumoMensal,
   type GastoDetalhe,
 } from "@/actions/gastos";
+import type { CompraDiretaDetalhe } from "@/actions/comprasDiretas";
 
 type CarregarResumo = (mes: number, ano: number) => Promise<ResumoMensal>;
 type CarregarDetalhes = (categoriaId: number, mes: number, ano: number) => Promise<GastoDetalhe[]>;
@@ -39,6 +40,27 @@ function GastoDetalheLinha({ gasto }: { gasto: GastoDetalhe }) {
       <span className="text-xs font-medium tabular-nums text-gray-800 dark:text-gray-200 ml-3 shrink-0">
         {formatBRL(gasto.valorMensal)}
       </span>
+    </div>
+  );
+}
+
+function CompraDiretaRow({ compra }: { compra: CompraDiretaDetalhe }) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-gray-400 dark:bg-gray-600" />
+      <div className="flex-1 flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{compra.descricao}</span>
+          {compra.numeroParcelas > 1 && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 shrink-0">
+              Parc {compra.parcelaAtual}/{compra.numeroParcelas}
+            </span>
+          )}
+        </div>
+        <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100 ml-3 shrink-0">
+          {formatBRL(compra.valorMensal)}
+        </span>
+      </div>
     </div>
   );
 }
@@ -220,18 +242,10 @@ export function ResumoGastos({
           </div>
         )}
 
-        {/* Linha compras diretas */}
-        {data.debitoDireto > 0 && (
-          <div className="flex items-center gap-3 py-1">
-            <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-gray-400 dark:bg-gray-600" />
-            <div className="flex-1 flex items-center justify-between">
-              <span className="text-sm text-gray-700 dark:text-gray-300">Compras diretas</span>
-              <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">
-                {formatBRL(data.debitoDireto)}
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Linhas de compras diretas: descrição + parcela */}
+        {data.comprasDiretas.map((c) => (
+          <CompraDiretaRow key={c.id} compra={c} />
+        ))}
 
         {/* Barra separadora + total */}
         {temDados && (

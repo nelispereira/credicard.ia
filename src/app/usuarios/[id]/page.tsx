@@ -30,7 +30,7 @@ export default async function InspecionarUsuarioPage({
   const mes = now.getMonth() + 1;
   const ano = now.getFullYear();
 
-  const [transactions, sharedInvoices, resumo] = await Promise.all([
+  const [transactions, sharedInvoices, resumo, comprasDiretas] = await Promise.all([
     prisma.invoiceTransaction.findMany({
       where: { personId: person.id },
       include: {
@@ -58,6 +58,7 @@ export default async function InspecionarUsuarioPage({
       orderBy: { periodoFim: "desc" },
     }),
     calcularResumoMensalAdmin(user.id, mes, ano),
+    prisma.compraDireta.findMany({ where: { personId: person.id } }),
   ]);
 
   return (
@@ -86,7 +87,7 @@ export default async function InspecionarUsuarioPage({
         carregarDetalhes={listarGastosDaCategoriaNoMesAdmin.bind(null, user.id)}
       />
 
-      <DebitosCartao transactions={transactions} sharedInvoices={sharedInvoices} />
+      <DebitosCartao transactions={transactions} sharedInvoices={sharedInvoices} comprasDiretas={comprasDiretas} />
     </div>
   );
 }

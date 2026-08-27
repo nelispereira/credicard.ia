@@ -5,7 +5,10 @@ import { categoriaGastoSchema, gastoSchema } from "@/schemas";
 import { getPersonByUserEmail, requireAdmin } from "@/lib/auth-utils";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { calcularDebitoDiretoDoMes } from "@/actions/comprasDiretas";
+import {
+  listarComprasDiretasDoMes as listarComprasDiretasDoMesInterno,
+  type CompraDiretaDetalhe,
+} from "@/actions/comprasDiretas";
 
 type TipoGasto = "UNICO" | "RECORRENTE" | "PARCELADO";
 
@@ -212,6 +215,7 @@ export type ResumoMensal = {
   porCategoria: { categoriaId: number; nome: string; cor: string | null; total: number }[];
   debitoCartao: number;
   debitoDireto: number;
+  comprasDiretas: CompraDiretaDetalhe[];
   totalGeral: number;
 };
 
@@ -263,11 +267,11 @@ async function calcularResumoMensalInterno(
 
   // Débito cartão: transações do mês atribuídas à pessoa; débito direto: compras parceladas fora de fatura
   let debitoCartao = 0;
-  let debitoDireto = 0;
+  let comprasDiretas: CompraDiretaDetalhe[] = [];
   if (person) {
     const inicioMes = new Date(ano, mes - 1, 1);
     const fimMes = new Date(ano, mes, 1);
-    const [result, direto] = await Promise.all([
+    const [result, diretas] = await Promise.all([
       prisma.invoiceTransaction.aggregate({
         where: {
           personId: person.id,
@@ -275,11 +279,12 @@ async function calcularResumoMensalInterno(
         },
         _sum: { valorBRL: true },
       }),
-      calcularDebitoDiretoDoMes(person.id, mes, ano),
+      listarComprasDiretasDoMesInterno(person.id, mes, ano),
     ]);
     debitoCartao = result._sum.valorBRL ?? 0;
-    debitoDireto = direto;
+    comprasDiretas = diretas;
   }
+  const debitoDireto = comprasDiretas.reduce((s, c) => s + c.valorMensal, 0);
 
   // Agrupar gastos por categoria
   const porCategoriaMap = new Map<number, { categoriaId: number; nome: string; cor: string | null; total: number }>();
@@ -307,7 +312,7 @@ async function calcularResumoMensalInterno(
   const totalGastos = porCategoria.reduce((s, c) => s + c.total, 0);
   const totalGeral = totalGastos + debitoCartao + debitoDireto;
 
-  return { porCategoria, debitoCartao, debitoDireto, totalGeral };
+  return { porCategoria, debitoCartao, debitoDireto, comprasDiretas, totalGeral };
 }
 
 export async function calcularResumoMensal(mes: number, ano: number): Promise<ResumoMensal> {
